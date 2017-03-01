@@ -15,14 +15,30 @@
  */
 package at.newmedialab.lmf.search.services.cores;
 
-import at.newmedialab.lmf.search.api.cores.SolrCoreService;
-import at.newmedialab.lmf.search.api.program.SolrProgramService;
-import at.newmedialab.lmf.search.exception.CoreAlreadyExistsException;
-import at.newmedialab.lmf.search.filters.LMFSearchFilter;
-import at.newmedialab.lmf.util.solr.SuggestionRequestHandler;
-import at.newmedialab.lmf.util.solr.suggestion.params.SuggestionRequestParams;
-import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Event;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.marmotta.commons.sesame.filter.SesameFilter;
@@ -55,16 +71,15 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.Value;
 import org.slf4j.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Event;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
-import java.io.*;
-import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import com.google.common.collect.Lists;
+import com.google.common.io.ByteStreams;
+
+import at.newmedialab.lmf.search.api.cores.SolrCoreService;
+import at.newmedialab.lmf.search.api.program.SolrProgramService;
+import at.newmedialab.lmf.search.exception.CoreAlreadyExistsException;
+import at.newmedialab.lmf.search.filters.LMFSearchFilter;
+import at.newmedialab.lmf.util.solr.SuggestionRequestHandler;
+import at.newmedialab.lmf.util.solr.suggestion.params.SuggestionRequestParams;
 
 /**
  * Add file description here!
@@ -456,8 +471,8 @@ public class SolrCoreServiceImpl implements SolrCoreService {
 
             if (activated) {
                 // update schema.xml and solrconfig.xml with the properties of the program
-                createSolrConfigXml(engine);
-                createSchemaXml(engine);
+                //createSolrConfigXml(engine);
+                //createSchemaXml(engine);
             }
 
             // register core with SOLR
@@ -791,9 +806,12 @@ public class SolrCoreServiceImpl implements SolrCoreService {
         log.info("registering core {} with embedded SOLR service", coreName);
 
         if(searchFilter.getCores().getCore(coreName) == null) {
-            CoreDescriptor d = new CoreDescriptor(searchFilter.getCores(), coreName, getCoreDirectory(coreName).getAbsolutePath());
-            SolrCore core = searchFilter.getCores().create(d);
-            searchFilter.getCores().register(core, false);
+        	//CoreDescriptor x = new Co
+        	File f = getCoreDirectory(coreName).getAbsoluteFile();
+        	Path p = f.toPath();
+            CoreDescriptor d = new CoreDescriptor(searchFilter.getCores(), coreName, p);
+            SolrCore core = searchFilter.getCores().create(coreName, new HashMap<String, String>());
+            searchFilter.getCores().reload(coreName);//, false);
         } else {
             log.error("core {} already registered, cannot reregister it",coreName);
         }
@@ -813,9 +831,10 @@ public class SolrCoreServiceImpl implements SolrCoreService {
      */
     private void unregisterSolrCore(String coreName) {
         log.info("unregistering core {} from embedded SOLR service", coreName);
-        SolrCore core = searchFilter.getCores().remove(coreName);
-        if(core != null)
-            core.close();
+        searchFilter.getCores().unload(coreName, true, true, true);
+//        SolrCore core = searchFilter.getCores().unload(coreName, true, true, true);
+//        if(core != null)
+//            core.close();
     }
 
 }

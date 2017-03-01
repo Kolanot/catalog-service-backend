@@ -25,7 +25,7 @@
     <properties>
         <psmss.version>${project.version}</psmss.version>
         <marmotta.version>3.4.0-SNAPSHOT</marmotta.version>
-		<sesame.version>2.7.13</sesame.version>
+		<sesame.version>2.8.6</sesame.version>
 		<alibaba.version>2.1-SNAPSHOT</alibaba.version>
 		<junit.version>4.11</junit.version>
 		<weld.version>2.1.Final</weld.version>
@@ -39,7 +39,7 @@
 		<h2.version>1.4.178</h2.version>
 		<postgresql.version>9.3-1100-jdbc4</postgresql.version>
 		<mysql.version>5.1.21</mysql.version>
-		<jetty.version>9.2.1.v20140609</jetty.version>
+		<jetty.version>9.3.14.v20161028</jetty.version>
 		<resteasy.version>3.0.10.Final</resteasy.version>
 		<jackson.version>2.3.3</jackson.version>
 		<titan.version>0.4.2</titan.version>

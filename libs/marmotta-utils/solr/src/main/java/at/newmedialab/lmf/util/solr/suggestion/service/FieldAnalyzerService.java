@@ -37,7 +37,7 @@ public class FieldAnalyzerService {
      */
     public static String analyzeString(SolrCore core, String df, String s) {
         try {
-            TokenStream ts = core.getSchema().getFieldType(df).getQueryAnalyzer().tokenStream(df, new StringReader(s));
+            TokenStream ts = core.getLatestSchema().getFieldType(df).getQueryAnalyzer().tokenStream(df, new StringReader(s));
             StringBuffer b = new StringBuffer();
             ts.reset();
             while(ts.incrementToken()) {

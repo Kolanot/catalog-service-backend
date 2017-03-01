@@ -19,7 +19,7 @@
         <maven.compiler.target>1.7</maven.compiler.target>
         <project.build.encoding>UTF-8</project.build.encoding>
         <marmotta.version>3.4.0-SNAPSHOT</marmotta.version>
-        <solr.version>4.3.1</solr.version>
+        <solr.version>6.4.1</solr.version>
         <jetty.version>9.0.3.v20130506</jetty.version>
     </properties>
 

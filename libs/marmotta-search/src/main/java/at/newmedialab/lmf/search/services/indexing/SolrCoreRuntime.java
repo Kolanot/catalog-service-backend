@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2013 Salzburg Research.
+x * Copyright (C) 2013 Salzburg Research.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,17 @@
  */
 package at.newmedialab.lmf.search.services.indexing;
 
-import at.newmedialab.lmf.search.api.indexing.SolrIndexingService;
-import at.newmedialab.lmf.search.filters.LMFSearchFilter;
-import at.newmedialab.lmf.search.services.cores.SolrCoreConfiguration;
-import at.newmedialab.lmf.worker.services.WorkerRuntime;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.apache.marmotta.kiwi.model.rdf.KiWiResource;
 import org.apache.marmotta.platform.core.util.CDIContext;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION;
@@ -36,12 +39,10 @@ import org.openrdf.model.ValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.locks.ReentrantLock;
+import at.newmedialab.lmf.search.api.indexing.SolrIndexingService;
+import at.newmedialab.lmf.search.filters.LMFSearchFilter;
+import at.newmedialab.lmf.search.services.cores.SolrCoreConfiguration;
+import at.newmedialab.lmf.worker.services.WorkerRuntime;
 
 /**
  * A class bundling administrative information about a running SOLR core.
@@ -56,7 +57,7 @@ public final class SolrCoreRuntime extends WorkerRuntime<SolrCoreConfiguration> 
     /**
      * The connection to the SOLR server to be used when committing this core
      */
-    private SolrServer              server;
+    private SolrClient              server;
 
     // used to ensure that the servers are initialised only by one thread
     private final ReentrantLock     serverLock;
@@ -112,7 +113,7 @@ public final class SolrCoreRuntime extends WorkerRuntime<SolrCoreConfiguration> 
                 result.add(valueFactory.createURI((String) doc.getFirstValue("lmf.uri")));
             }
             return result;
-        } catch (SolrServerException e) {
+        } catch (SolrServerException |IOException  e ) {
             return Collections.emptyList();
         }
     }

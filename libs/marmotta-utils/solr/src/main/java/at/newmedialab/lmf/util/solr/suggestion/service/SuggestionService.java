@@ -78,7 +78,7 @@ public class SuggestionService {
         SolrQueryResponse response = query(query,df,fields,fqs);
 
         //of no results, try spellcheck (if defined and if spellchecked query differs from original)
-        if(((ResultContext)response.getValues().get("response")).docs.size() > 0) {
+        if(((ResultContext)response.getValues().get("response")).getDocList().size() > 0) {
             result = SuggestionResultFactory.createResult(solrCore, response, fields, query, df, multivalue);
         } else if(spellcheck_enabled) {
             String spellchecked_query = getSpellcheckedQuery(query,response);
@@ -87,7 +87,7 @@ public class SuggestionService {
             //query with spellchecked query
             if(spellchecked_query != null) {
                 response = query(spellchecked_query,df,fields,fqs);
-                if(((ResultContext)response.getValues().get("response")).docs.size() > 0) {
+                if(((ResultContext)response.getValues().get("response")).getDocList().size() > 0) {
                     result = SuggestionResultFactory.createResult(solrCore, response, fields, spellchecked_query, df,multivalue);
                 }
             }
