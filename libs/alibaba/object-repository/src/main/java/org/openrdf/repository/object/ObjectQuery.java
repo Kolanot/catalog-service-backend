@@ -93,13 +93,13 @@ public class ObjectQuery implements Query {
 		query.setMaxQueryTime(sec);
 	}
 
-	public void setMaxExecutionTime(int maxExecTime) {
-		query.setMaxExecutionTime(maxExecTime);
-	}
-
-	public int getMaxExecutionTime() {
-		return query.getMaxExecutionTime();
-	}
+//	public void setMaxExecutionTime(int maxExecTime) {
+//		query.setMaxExecutionTime(maxExecTime);
+//	}
+//
+//	public int getMaxExecutionTime() {
+//		return query.getMaxExecutionTime();
+//	}
 
 	public boolean getIncludeInferred() {
 		return query.getIncludeInferred();

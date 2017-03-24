@@ -667,62 +667,78 @@ public class SolrCoreServiceImpl implements SolrCoreService {
                     log.error("field {} has an invalid field type; ignoring field definition", fieldName);
                     continue;
                 }
-
-                Element fieldElement = new Element("field");
-                fieldElement.setAttribute("name", fieldName);
-                fieldElement.setAttribute("type", solrType);
-                // Set the default properties
-                fieldElement.setAttribute("stored", "true");
-                fieldElement.setAttribute("indexed", "true");
-                fieldElement.setAttribute("multiValued", "true");
-
-                // FIXME: Hardcoded Stuff!
-                if (solrType.equals("location")) {
-                    fieldElement.setAttribute("indexed", "true");
-                    fieldElement.setAttribute("multiValued", "false");
+                if (fieldMapping.getFieldConfig() != null && fieldMapping.getFieldConfig().containsKey("dynamicField" ) ) {
+                	String dynamicFieldName = fieldMapping.getFieldConfig().get("dynamicField");
+                	Element dynamicElement = new Element("dynamicField");
+                	addField(schemaNode, dynamicElement, dynamicFieldName, solrType, fieldMapping.getFieldConfig());
+                	
                 }
-
-                // Handle extra field configuration
-                final Map<String, String> fieldConfig = fieldMapping.getFieldConfig();
-                if (fieldConfig != null) {
-                    for (Map.Entry<String,String> attr : fieldConfig.entrySet()) {
-                        if (SOLR_FIELD_OPTIONS.contains(attr.getKey())) {
-                            fieldElement.setAttribute(attr.getKey(), attr.getValue());
-                        }
-                    }
+                else {
+                    Element fieldElement = new Element("field");
+                    addField(schemaNode, fieldElement, fieldName, solrType, fieldMapping.getFieldConfig());
                 }
-                fieldsNode.addContent(fieldElement);
-
-                if (fieldConfig != null && fieldConfig.keySet().contains(SOLR_COPY_FIELD_OPTION)) {
-                    String[] copyFields = fieldConfig.get(SOLR_COPY_FIELD_OPTION).split("\\s*,\\s*");
-                    for (String copyField : copyFields) {
-                        if (copyField.trim().length() > 0) { // ignore 'empty' fields
-                            Element copyElement = new Element("copyField");
-                            copyElement.setAttribute("source", fieldName);
-                            copyElement.setAttribute("dest", copyField.trim());
-                            schemaNode.addContent(copyElement);
-                        }
-                    }
-                } else {
-                    Element copyElement = new Element("copyField");
-                    copyElement.setAttribute("source", fieldName);
-                    copyElement.setAttribute("dest", "lmf.text_all");
-                    schemaNode.addContent(copyElement);
-                }
-
-                //for suggestions, copy all fields to lmf.spellcheck (used for spellcheck and querying);
-                //only facet is a supported type at the moment
-                if (fieldConfig != null && fieldConfig.keySet().contains(SOLR_SUGGESTION_FIELD_OPTION)) {
-                    String suggestionType = fieldConfig.get(SOLR_SUGGESTION_FIELD_OPTION);
-                    if(suggestionType.equals("facet")) {
-                        Element copyElement = new Element("copyField");
-                        copyElement.setAttribute("source", fieldName);
-                        copyElement.setAttribute("dest", "lmf.spellcheck");
-                        schemaNode.addContent(copyElement);
-                    } else {
-                        log.error("suggestionType "+suggestionType+" not supported");
-                    }
-                }
+//                Element fieldElement = new Element("field");
+//                fieldElement.setAttribute("name", fieldName);
+//                
+//                
+//                if ( fieldName.startsWith("__")) {
+//                	fieldElement = new Element("dynamicField");
+//                	fieldElement.setAttribute("name", "*"+fieldName);
+//                }
+//
+//                fieldElement.setAttribute("type", solrType);
+//                // Set the default properties
+//                fieldElement.setAttribute("stored", "true");
+//                fieldElement.setAttribute("indexed", "true");
+//                fieldElement.setAttribute("multiValued", "true");
+//
+//                // FIXME: Hardcoded Stuff!
+//                if (solrType.equals("location")) {
+//                    fieldElement.setAttribute("indexed", "true");
+//                    fieldElement.setAttribute("multiValued", "false");
+//                }
+//
+//                final Map<String, String> fieldConfig = fieldMapping.getFieldConfig();
+//                // Handle extra field configuration
+//                if (fieldConfig != null) {
+//                    for (Map.Entry<String,String> attr : fieldConfig.entrySet()) {
+//                        if (SOLR_FIELD_OPTIONS.contains(attr.getKey())) {
+//                            fieldElement.setAttribute(attr.getKey(), attr.getValue());
+//                        }
+//                    }
+//                }
+//                final Map<String, String> fieldConfig = fieldMapping.getFieldConfig();
+//
+//                if (fieldConfig != null && fieldConfig.keySet().contains(SOLR_COPY_FIELD_OPTION)) {
+//                    String[] copyFields = fieldConfig.get(SOLR_COPY_FIELD_OPTION).split("\\s*,\\s*");
+//                    for (String copyField : copyFields) {
+//                        if (copyField.trim().length() > 0) { // ignore 'empty' fields
+//                            Element copyElement = new Element("copyField");
+//                            copyElement.setAttribute("source", fieldName);
+//                            copyElement.setAttribute("dest", copyField.trim());
+//                            schemaNode.addContent(copyElement);
+//                        }
+//                    }
+//                } else {
+//                    Element copyElement = new Element("copyField");
+//                    copyElement.setAttribute("source", fieldName);
+//                    copyElement.setAttribute("dest", "lmf.text_all");
+//                    schemaNode.addContent(copyElement);
+//                }
+//
+//                //for suggestions, copy all fields to lmf.spellcheck (used for spellcheck and querying);
+//                //only facet is a supported type at the moment
+//                if (fieldConfig != null && fieldConfig.keySet().contains(SOLR_SUGGESTION_FIELD_OPTION)) {
+//                    String suggestionType = fieldConfig.get(SOLR_SUGGESTION_FIELD_OPTION);
+//                    if(suggestionType.equals("facet")) {
+//                        Element copyElement = new Element("copyField");
+//                        copyElement.setAttribute("source", fieldName);
+//                        copyElement.setAttribute("dest", "lmf.spellcheck");
+//                        schemaNode.addContent(copyElement);
+//                    } else {
+//                        log.error("suggestionType "+suggestionType+" not supported");
+//                    }
+//                }
             }
 
             if (!schemaFile.exists() || schemaFile.canWrite()) {
@@ -742,7 +758,82 @@ public class SolrCoreServiceImpl implements SolrCoreService {
         }
 
     }
+    private void addField(Element schemaNode, Element fieldElement, String fieldName, String solrType, Map<String, String> fieldConfig ) {
+    	if (solrType.equals("dynamic")) {
+    		fieldElement = new Element("dynamicField");
+    		solrType = "string";		// use string as default
+    		if ( fieldConfig != null) {
+    			// when
+    			if (fieldConfig.containsKey("solrType")) {
+    				solrType = fieldConfig.get("solrType");
+    			}
+    			if ( fieldConfig.containsKey("dynamicField") ) {
+    				fieldName = fieldConfig.get("dynamicField");
+    			}
+    		}
+    		else {
+    			// when no name in config - default to string
+    			fieldName = "*_s"; // default to string ...
+    		}
+    		
+    	}
+    	
+        fieldElement.setAttribute("name", fieldName);
+        // when dynamic, we need a valid solrType
+        fieldElement.setAttribute("type", solrType);
+        // Set the default properties
+        fieldElement.setAttribute("stored", "true");
+        fieldElement.setAttribute("indexed", "true");
+        fieldElement.setAttribute("multiValued", "true");
 
+        // FIXME: Hardcoded Stuff!
+        if (solrType.equals("location")) {
+            fieldElement.setAttribute("indexed", "true");
+            fieldElement.setAttribute("multiValued", "false");
+        }
+
+        if (fieldConfig != null) {
+            for (Map.Entry<String,String> attr : fieldConfig.entrySet()) {
+                if (SOLR_FIELD_OPTIONS.contains(attr.getKey())) {
+                    fieldElement.setAttribute(attr.getKey(), attr.getValue());
+                }
+            }
+        }
+        Element fieldsNode = schemaNode.getChild("fields");
+        fieldsNode.addContent(fieldElement);
+        
+        if (fieldConfig != null && fieldConfig.keySet().contains(SOLR_COPY_FIELD_OPTION)) {
+            String[] copyFields = fieldConfig.get(SOLR_COPY_FIELD_OPTION).split("\\s*,\\s*");
+            for (String copyField : copyFields) {
+                if (copyField.trim().length() > 0) { // ignore 'empty' fields
+                    Element copyElement = new Element("copyField");
+                    copyElement.setAttribute("source", fieldName);
+                    copyElement.setAttribute("dest", copyField.trim());
+                    schemaNode.addContent(copyElement);
+                }
+            }
+        } else {
+            Element copyElement = new Element("copyField");
+            copyElement.setAttribute("source", fieldName);
+            copyElement.setAttribute("dest", "lmf.text_all");
+            schemaNode.addContent(copyElement);
+        }
+
+        //for suggestions, copy all fields to lmf.spellcheck (used for spellcheck and querying);
+        //only facet is a supported type at the moment
+        if (fieldConfig != null && fieldConfig.keySet().contains(SOLR_SUGGESTION_FIELD_OPTION)) {
+            String suggestionType = fieldConfig.get(SOLR_SUGGESTION_FIELD_OPTION);
+            if(suggestionType.equals("facet")) {
+                Element copyElement = new Element("copyField");
+                copyElement.setAttribute("source", fieldName);
+                copyElement.setAttribute("dest", "lmf.spellcheck");
+                schemaNode.addContent(copyElement);
+            } else {
+                log.error("suggestionType "+suggestionType+" not supported");
+            }
+        }
+
+    }
     /**
      * Create/update the solrconfig.xml file for the given core according to the core configuration.
      *

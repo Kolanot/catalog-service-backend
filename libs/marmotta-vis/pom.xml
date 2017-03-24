@@ -31,18 +31,18 @@
 
 	<name>Marmotta Module: Visualisation, Editing of Catalogs</name>
 	<description>
-	
+	Module offering API for Visualizing Graphs with the VIS.js module	
 	</description>
 
 	<properties>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-		<marmotta.version>3.4.0-SNAPSHOT</marmotta.version>
-		<sesame.version>2.7.13</sesame.version>
+		<!-- 
+		<sesame.version>2.7.16</sesame.version>
 		<junit.version>4.11</junit.version>
 		<weld.version>2.1.Final</weld.version>
 		<weld.core.version>2.1.2.Final</weld.core.version>
-		<rest.assured.version>2.3.2</rest.assured.version>
 		<hamcrest.version>1.3</hamcrest.version>
 		<tempus.fugit.version>1.1</tempus.fugit.version>
 		<jatl.version>0.2.2</jatl.version>
@@ -55,6 +55,7 @@
 		<resteasy.version>3.0.10.Final</resteasy.version>
 		<jackson.version>2.3.3</jackson.version>
 		<titan.version>0.4.2</titan.version>
+		 -->
 	</properties>
 
 	<build>
@@ -117,7 +118,9 @@
 			</plugins>
 
 		</pluginManagement>
-	
+		<plugins>
+		</plugins>
+		<!-- 
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -139,66 +142,51 @@
 				</configuration>
 			</plugin>
 		</plugins>
+		 -->
 	</build>
 
 	<dependencies>
-	<!-- 
-		<dependency>
-			<groupId>eu.fp7.eagle</groupId>
-			<artifactId>knowledge-model</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>eu.fp7.eagle</groupId>
-			<artifactId>knowledge-space</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-	 -->
 		<dependency>
 			<groupId>org.apache.marmotta</groupId>
 			<artifactId>marmotta-core</artifactId>
-			<version>${marmotta.version}</version>
+			<version>${project.version}</version>
 		</dependency>
 
 		<!-- Test dependencies -->
 		<dependency>
 			<groupId>org.apache.marmotta</groupId>
 			<artifactId>marmotta-core</artifactId>
-			<version>${marmotta.version}</version>
+			<version>${project.version}</version>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-server</artifactId>
-			<version>${jetty.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-servlet</artifactId>
-			<version>${jetty.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.weld.se</groupId>
 			<artifactId>weld-se-core</artifactId>
-			<version>${weld.core.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<version>${h2.version}</version>
 			<scope>test</scope>
 		</dependency>
 
+		<!-- 
 		<dependency>
 			<groupId>com.jayway.restassured</groupId>
 			<artifactId>rest-assured</artifactId>
@@ -235,7 +223,6 @@
 			<version>${javax.el.version}</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- 
 		<dependency>
 			<groupId>eu.fp7.eagle</groupId>
 			<artifactId>knowledge-space</artifactId>
@@ -256,7 +243,7 @@
 		<dependency>
 			<groupId>org.apache.marmotta</groupId>
 			<artifactId>marmotta-alibaba</artifactId>
-			<version>3.4.0-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 

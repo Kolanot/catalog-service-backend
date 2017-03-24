@@ -65,7 +65,6 @@
 			<groupId>knowledge.alibaba</groupId>
 			<artifactId>object-repository</artifactId>
 			<version>2.1</version>
-			<type>maven-plugin</type>
 		</dependency>
 	</dependencies>
 </project>

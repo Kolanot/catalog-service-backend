@@ -1,9 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--  
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
 
- -->
+        http://www.apache.org/licenses/LICENSE-2.0  
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
 		<groupId>eu.nimble.services.catalog</groupId>
 		<artifactId>marmotta-platform</artifactId>
@@ -12,28 +26,21 @@
 
     <artifactId>webapp</artifactId>
     <packaging>war</packaging>
-    <version>1.0.0-SNAPSHOT</version>
 
     <name>WebApp Container for the Nimble Catalog Service</name>
     <description>Combines the single web services of the bundles into a complete web application</description>
 
-	<repositories>
-		<repository>
-			<id>Marmotta Snapshots</id>
-			<url>https://repository.apache.org/content/repositories/snapshots</url>
-		</repository>
-	</repositories>
-	
+
     <properties>
-        <marmotta.home>/tmp/nimble</marmotta.home>
-        <marmotta.context>/catalog-service</marmotta.context>
-        <marmotta.port>8084</marmotta.port>
+        <marmotta.home>${java.io.tmpdir}${file.separator}Demo</marmotta.home>
+        <marmotta.context>/</marmotta.context>
+        <marmotta.port>8080</marmotta.port>
         <marmotta.backend>kiwi</marmotta.backend>
 
         <project.build.sourceEncoding>utf-8</project.build.sourceEncoding>
 
         <marmotta.version>3.4.0-SNAPSHOT</marmotta.version>
-        <sesame.version>2.7.13</sesame.version>
+        <sesame.version>2.7.16</sesame.version>
         <junit.version>4.11</junit.version>
         <weld.version>2.1.Final</weld.version>
         <weld.core.version>2.1.2.Final</weld.core.version>
@@ -47,10 +54,9 @@
         <postgresql.version>9.3-1100-jdbc4</postgresql.version>
         <mysql.version>5.1.21</mysql.version>
         <jetty.version>9.2.1.v20140609</jetty.version>
-        <resteasy.version>3.0.10.Final</resteasy.version>
+        <resteasy.version>3.0.18.Final</resteasy.version>
         <jackson.version>2.3.3</jackson.version>
         <titan.version>0.4.2</titan.version>
-        <shiro.version>1.2.4</shiro.version>
     </properties>
 
     <build>
@@ -60,7 +66,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.5.1</version>
+                    <version>3.0</version>
                     <configuration>
                         <source>1.8</source>
                         <target>1.8</target>
@@ -123,13 +129,11 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.5.1</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
             </plugin>
-  <!--          
             <plugin>
                 <groupId>org.apache.tomcat.maven</groupId>
                 <artifactId>tomcat7-maven-plugin</artifactId>
@@ -164,7 +168,7 @@
                             <goal>wget</goal>
                         </goals>
                         <configuration>
-                            <url>http://localhost:${marmotta.port}${marmotta.context}/index.jsp</url>
+                            <url>http://localhost:${marmotta.port}${marmotta.context}index.jsp</url>
                             <outputFileName>index.html</outputFileName>
                             <outputDirectory>${project.build.directory}/it/</outputDirectory>
                             <skipCache>true</skipCache>
@@ -177,7 +181,7 @@
                             <goal>wget</goal>
                         </goals>
                         <configuration>
-                            <url>http://localhost:${marmotta.port}${marmotta.context}/config/data/kiwi.version</url>
+                            <url>http://localhost:${marmotta.port}${marmotta.context}config/data/kiwi.version</url>
                             <outputFileName>kiwi-version.json</outputFileName>
                             <outputDirectory>${project.build.directory}/it/</outputDirectory>
                             <skipCache>true</skipCache>
@@ -201,11 +205,9 @@
                     </execution>
                 </executions>
             </plugin>
-    -->        
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
             </plugin>
-    
         </plugins>
     </build>
 
@@ -223,11 +225,6 @@
                 </property>
             </activation>
             <dependencies>
-                <dependency>
-                    <groupId>org.apache.marmotta</groupId>
-                    <artifactId>marmotta-ldp</artifactId>
-                    <version>${marmotta.version}</version>
-                </dependency>
                 <dependency>
                     <groupId>org.apache.marmotta</groupId>
                     <artifactId>marmotta-backend-kiwi</artifactId>
@@ -331,7 +328,7 @@
                 </dependency>
             </dependencies>
         </profile>
-        <!--
+
         <profile>
             <id>bigdata</id>
             <activation>
@@ -353,7 +350,6 @@
                 </dependency>
             </dependencies>
         </profile>
-        -->
 
 
         <!-- Caching Backends for KiWi -->
@@ -447,7 +443,7 @@
               -->
             <id>archetype-it</id>
             <properties>
-                <marmotta.port>59668</marmotta.port>
+                <marmotta.port>64586</marmotta.port>
             </properties>
         </profile>
     </profiles>
@@ -482,11 +478,6 @@
         <dependency>
             <groupId>org.apache.marmotta</groupId>
             <artifactId>marmotta-user</artifactId>
-            <version>${marmotta.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.marmotta</groupId>
-            <artifactId>marmotta-ldp</artifactId>
             <version>${marmotta.version}</version>
         </dependency>
         <dependency>
@@ -569,10 +560,26 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
         <dependency>
         	<groupId>org.apache.marmotta</groupId>
-        	<artifactId>marmotta-vis</artifactId>
+        	<artifactId>marmotta-skos</artifactId>
         	<version>3.4.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.shiro</groupId>
+        	<artifactId>shiro-core</artifactId>
+        	<version>1.2.4</version>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.shiro</groupId>
+        	<artifactId>shiro-web</artifactId>
+        	<version>1.2.4</version>
+        </dependency>
+        <dependency>
+        	<groupId>eu.nimble.services.catalog</groupId>
+        	<artifactId>identity-provider</artifactId>
+        	<version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
         	<groupId>org.apache.marmotta</groupId>
@@ -581,18 +588,18 @@
         </dependency>
         <dependency>
         	<groupId>org.apache.marmotta</groupId>
-        	<artifactId>marmotta-skos</artifactId>
+        	<artifactId>marmotta-alibaba</artifactId>
         	<version>3.4.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-        	<groupId>eu.nimble.services.catalog</groupId>
-        	<artifactId>identity-provider</artifactId>
-        	<version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
         	<groupId>eu.nimble.services.catalog</groupId>
         	<artifactId>dashboard</artifactId>
         	<version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.marmotta</groupId>
+        	<artifactId>marmotta-vis</artifactId>
+        	<version>3.4.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

@@ -50,6 +50,7 @@ import org.apache.marmotta.platform.core.qualifiers.event.Created;
 import org.apache.marmotta.platform.core.qualifiers.event.Removed;
 import org.apache.marmotta.platform.core.qualifiers.event.Updated;
 import org.apache.marmotta.platform.core.qualifiers.event.transaction.AfterCommit;
+import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
 import org.openrdf.model.*;
 import org.openrdf.model.URI;
@@ -61,6 +62,8 @@ import org.slf4j.Logger;
 import at.newmedialab.lmf.search.api.cores.SolrCoreService;
 import at.newmedialab.lmf.search.api.indexing.SolrIndexingService;
 import at.newmedialab.lmf.search.api.program.SolrProgramService;
+import at.newmedialab.lmf.search.ldpath.model.DynamicValue;
+import at.newmedialab.lmf.search.ldpath.model.backend.WildcardAwareBackend;
 import at.newmedialab.lmf.search.services.cores.SolrCoreConfiguration;
 import at.newmedialab.lmf.worker.services.WorkerRuntime;
 import at.newmedialab.lmf.worker.services.WorkerServiceImpl;
@@ -241,7 +244,8 @@ public class SolrIndexingServiceImpl extends WorkerServiceImpl<SolrCoreRuntime,S
                     }).toArray(new Resource[0]);
                 }
 
-                final SesameConnectionBackend backend = ContextAwareSesameConnectionBackend.withConnection(connection, contexts);
+                //final SesameConnectionBackend backend = ContextAwareSesameConnectionBackend.withConnection(connection, contexts);
+                final SesameConnectionBackend backend = new WildcardAwareBackend(connection, contexts);
                 if (program.getFilter() != null && !program.getFilter().apply(backend, resource, Collections.singleton((Value) resource))) {
                     if (log.isDebugEnabled()) {
                         log.debug("({}) <{}> does not match filter '{}', ignoring", coreName, resource, program.getFilter().getPathExpression(backend));
@@ -304,10 +308,30 @@ public class SolrIndexingServiceImpl extends WorkerServiceImpl<SolrCoreRuntime,S
                         final boolean isSinge = !isMultiValuedField(rule);
                         for (Object value : values) {
                             if (value != null) {
-                                doc.addField(rule.getFieldName(), value);
-                                if (isSinge) {
-                                    break;
-                                }
+                            	if ( value instanceof DynamicValue ) {
+                            		DynamicValue dValue = (DynamicValue) value;
+                            		if ( isSinge) {
+                            			if ( doc.getField(dValue.fieldName()) !=null) {
+                            				break;
+                            			}
+                            		}
+                            		doc.addField(dValue.fieldName(), value);
+                            	}
+//                            	if ( isDynamic ) {
+//                            		String dynamicFieldName = getDynamicFieldName(backend, dynamicNameTemplate, value);
+//                            		if ( isSinge ) {
+//                            			if ( doc.getField(dynamicFieldName) != null) {
+//                            				break;
+//                            			}
+//                            		}
+//                            		doc.addField(getDynamicFieldName(backend, dynamicNameTemplate, value), getDynamicFieldValue(value));
+//                            	}
+                            	else {
+	                                doc.addField(rule.getFieldName(), value);
+	                                if (isSinge) {
+	                                    break;
+	                                }
+                            	}
                             }
                         }
                         if (rule.getFieldConfig() != null) {
@@ -353,7 +377,6 @@ public class SolrIndexingServiceImpl extends WorkerServiceImpl<SolrCoreRuntime,S
             log.error("unknown error while indexing document",t);
         }
     }
-
     private boolean isMultiValuedField(FieldMapping<?, Value> rule) {
         try {
             // Field type location is always single
@@ -368,6 +391,34 @@ public class SolrIndexingServiceImpl extends WorkerServiceImpl<SolrCoreRuntime,S
         // We use multiValued=true as default.
         return true;
     }
+//    private String getDynamicField(FieldMapping<?, Value> rule) {
+//        if (rule.getFieldConfig() != null && rule.getFieldConfig().containsKey("dynamicField")) {
+//            return rule.getFieldConfig().get("dynamicField");
+//        } 
+//    	return null;
+//    }
+//    private boolean isDynamicOnly(FieldMapping<?, Value> rule) {
+//        if (rule.getFieldConfig() != null && rule.getFieldConfig().containsKey("dynamicOnly")) {
+//        	 return Boolean.parseBoolean(rule.getFieldConfig().get("dynamicOnly"));
+//        } 
+//    	return true;
+//    }
+//    private String getDynamicFieldName(SesameConnectionBackend backend, String nameTemplate, Object value) {
+//    	String[] token = value.toString().split(WildcardAwareBackend.SEPARATOR);
+//    	if ( token.length == 2 ) {
+//    		URI prop = backend.createURI(token[0]);
+//    		String local = prop.getLocalName();
+//    		return nameTemplate.replace("*", local);
+//    	}
+//    	return nameTemplate.replace("*", "");
+//    }
+//    private String getDynamicFieldValue(Object value) {
+//    	String[] token = value.toString().split(WildcardAwareBackend.SEPARATOR);
+//    	if ( token.length == 2 ) {
+//    		return token[1];
+//    	}
+//    	return value.toString();
+//    }
 
     /**
      * Return an appropriate resource id, depending on which backend implementation is used.

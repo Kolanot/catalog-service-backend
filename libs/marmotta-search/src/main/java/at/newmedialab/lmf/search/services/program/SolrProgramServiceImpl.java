@@ -15,8 +15,20 @@
  */
 package at.newmedialab.lmf.search.services.program;
 
-import at.newmedialab.lmf.search.api.program.SolrProgramService;
-import at.newmedialab.lmf.search.ldpath.model.transformers.LatLonTransformer;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
+
 import org.apache.marmotta.commons.sesame.model.Namespaces;
 import org.apache.marmotta.ldpath.LDPath;
 import org.apache.marmotta.ldpath.backend.sesame.SesameConnectionBackend;
@@ -33,17 +45,9 @@ import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.slf4j.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import at.newmedialab.lmf.search.api.program.SolrProgramService;
+import at.newmedialab.lmf.search.ldpath.model.transformers.DynamicValueTransformer;
+import at.newmedialab.lmf.search.ldpath.model.transformers.LatLonTransformer;
 
 /**
  * Add file description here!
@@ -129,6 +133,11 @@ public class SolrProgramServiceImpl implements SolrProgramService {
 
         typeMap.put(Namespaces.NS_LMF_TYPES + "lower_string", "lower_string");
         typeMap.put(Namespaces.NS_LMF_TYPES + "reverse_path_ngrams", "reverse_path_ngrams");
+        //
+        typeMap.put(Namespaces.NS_LMF_TYPES + "dynamic", "dynamic");
+//        typeMap.put(Namespaces.NS_LMF_TYPES + "dynamic_i", "dynamic_i");
+//        typeMap.put(Namespaces.NS_LMF_TYPES + "dynamic_d", "dynamic_d");
+//        typeMap.put(Namespaces.NS_LMF_TYPES + "dynamic_dt", "dynamic_dt");
 
         xsdSolrTypeMap = Collections.unmodifiableMap(typeMap);
     }
@@ -219,7 +228,12 @@ public class SolrProgramServiceImpl implements SolrProgramService {
 
         ldpathConfig.addTransformer(Namespaces.NS_LMF_TYPES + "reverse_path_ngrams", new StringTransformer<Value>());
         ldpathConfig.addTransformer(Namespaces.NS_LMF_TYPES + "lower_string", new StringTransformer<Value>());
-    }
+        // transformer for dynamic index values (strings)
+        ldpathConfig.addTransformer(Namespaces.NS_LMF_TYPES + "dynamic", new DynamicValueTransformer());
+//        ldpathConfig.addTransformer(Namespaces.NS_LMF_TYPES + "dynamic_i", new DynamicValueTransformer());
+//        ldpathConfig.addTransformer(Namespaces.NS_LMF_TYPES + "dynamic_d", new DynamicValueTransformer());
+//        ldpathConfig.addTransformer(Namespaces.NS_LMF_TYPES + "dynamic_dt", new DynamicValueTransformer());
+}
 
 
     @Override

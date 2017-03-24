@@ -11,7 +11,7 @@
 	<name>Alibaba Dependencies</name>
 	<description>Alibaba Dependencies (Composition Repository Blob-Store)</description>
 	<properties>
-		<sesame.version>2.8.6</sesame.version>
+		<sesame.version>2.7.16</sesame.version>
 		<javassist.version>3.11.0.GA</javassist.version>
 		<sl4j.version>1.7.12</sl4j.version>
 		<junit.version>4.11</junit.version>
