@@ -25,11 +25,7 @@
     <properties>
         <psmss.version>${project.version}</psmss.version>
         <marmotta.version>3.4.0-SNAPSHOT</marmotta.version>
-<<<<<<< HEAD
-		<sesame.version>2.8.6</sesame.version>
-=======
 		<sesame.version>2.7.16</sesame.version>
->>>>>>> master
 		<alibaba.version>2.1-SNAPSHOT</alibaba.version>
 		<junit.version>4.11</junit.version>
 		<weld.version>2.1.Final</weld.version>
