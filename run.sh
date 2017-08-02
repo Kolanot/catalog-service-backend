@@ -22,19 +22,24 @@ elif [ "$1" == "bx-deploy" ]; then
 
     # stop and delete current container (necessary for update)
     echo "********* Stopping and removing old container *********"
-    bx ic stop marmotta-backend
-    bx ic wait marmotta-backend
-    bx ic rm --force marmotta-backend
+    # !!!!! properties have to be saved first #volumeissue !!!!!!!!!!!!!!!!!
+#    bx ic stop marmotta-backend
+#    bx ic wait marmotta-backend
+#    bx ic rm --force marmotta-backend
+
+    # wait for container to be removed
+    sleep 2.0
 
     # run marmotta
     echo "********* Starting new container *********"
     bx ic run --name marmotta-backend \
-        -v /var/lib/marmotta \
         --link marmotta-db:marmotta-db \
         -p 8080:8080 \
-        -v marmotta-settings:/var/lib/marmotta \
         --restart=unless-stopped \
         -m 2048 registry.eu-gb.bluemix.net/semantic_mediator_container/marmotta-backend
+
+        # not working on Bluemix :(
+#        -v marmotta-settings:/var/lib/marmotta \
 
     # bind IP address to new container
     bx ic ip-bind 134.168.33.237 marmotta-backend
