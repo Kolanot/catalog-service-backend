@@ -9,6 +9,8 @@ services:
         DB_PORT: 5432
         DB_USER: root
         DB_PASS: changeme
+        TOMCAT_USER: admin
+        TOMCAT_PASSWORD: changeme
     ports:
       - "8080:8080"
 

@@ -17,8 +17,10 @@ elif [ "$1" == "bx-deploy" ]; then
         -t registry.eu-gb.bluemix.net/semantic_mediator_container/marmotta-backend:latest \
         --build-arg DB_HOST=marmotta-db \
         --build-arg DB_PORT=5432 \
-        --build-arg DB_USER=root \
-        --build-arg DB_PASS=changeme .
+        --build-arg DB_USER=${DB_USER:-root} \
+        --build-arg DB_PASS=${DB_PASS:-changeme} \
+        --build-arg TOMCAT_USER=${TOMCAT_USER:-admin} \
+        --build-arg TOMCAT_PASSWORD=${TOMCAT_PASSWORD:-changeme} .
 
     # stop and delete current container (necessary for update)
     echo "********* Stopping and removing old container *********"
@@ -51,8 +53,8 @@ elif [ "$1" == "bx-init" ]; then
 
     # run postgres container
     bx ic run --name marmotta-db \
-        -e "POSTGRES_PASSWORD=changeme" \
-        -e "POSTGRES_USER=root" \
+        -e "POSTGRES_PASSWORD=${DB_PASS:-changeme}" \
+        -e "POSTGRES_USER=${DB_USER:-root}" \
         -e "POSTGRES_DB=marmotta" \
         -p 5432:5432 \
         -m 256 registry.eu-gb.bluemix.net/semantic_mediator_container/postgre

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# handle configuration
+# create Marmotta configuration
 if [ ! -f "$CONF_PATH" ]; then
     mkdir -p "$(dirname $CONF_PATH)"
     echo "security.enabled = false" > $CONF_PATH
@@ -13,6 +13,19 @@ if [ ! -f "$CONF_PATH" ]; then
 else
     echo "$CONF_PATH already exists"
 fi
+
+# create Tomcat configuration
+TOMCAT_USERSFILE=/usr/local/tomcat/conf/tomcat-users.xml
+echo "<?xml version='1.0' encoding='utf-8'?>" > $TOMCAT_USERSFILE
+echo "<tomcat-users>" >> $TOMCAT_USERSFILE
+echo "    <role rolename='manager-gui'/>" >> $TOMCAT_USERSFILE
+echo "    <role rolename='manager-gui'/>" >> $TOMCAT_USERSFILE
+echo "    <role rolename='manager-script'/>" >> $TOMCAT_USERSFILE
+echo "    <user username='${TOMCAT_USER:-admin}' password='${TOMCAT_PASSWORD:-changeme}' roles='manager,manager-gui,manager-script'/>" >> $TOMCAT_USERSFILE
+echo "</tomcat-users>" >> $TOMCAT_USERSFILE
+
+echo "created new tomcat user file $TOMCAT_USERSFILE"
+
 
 # start tomcat
 catalina.sh run

@@ -5,9 +5,8 @@ ARG DB_HOST
 ARG DB_PORT
 ARG DB_USER
 ARG DB_PASS
-
-# setup tomcat
-COPY ./docker/tomcat-users.xml /usr/local/tomcat/conf/
+ARG TOMCAT_USER
+ARG TOMCAT_PASSWORD
 
 # copy application data
 COPY ./docker/marmotta.xml /usr/local/tomcat/conf/Catalina/localhost/
@@ -19,6 +18,10 @@ ENV DB_HOST $DB_HOST
 ENV DB_PORT $DB_PORT
 ENV DB_USER $DB_USER
 ENV DB_PASS $DB_PASS
+
+# Tomcat configuration
+ENV TOMCAT_USER $TOMCAT_USER
+ENV TOMCAT_PASSWORD $TOMCAT_PASSWORD
 
 COPY ./entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["bash", "/entrypoint.sh"]
