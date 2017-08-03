@@ -18,7 +18,7 @@ elif [ "$1" == "bx-deploy" ]; then
         --build-arg DB_HOST=marmotta-db \
         --build-arg DB_PORT=5432 \
         --build-arg DB_USER=${DB_USER:-root} \
-        --build-arg DB_PASS=${DB_PASS:-changeme} \
+        --build-arg DB_PASSWORD=${DB_PASSWORD:-changeme} \
         --build-arg TOMCAT_USER=${TOMCAT_USER:-admin} \
         --build-arg TOMCAT_PASSWORD=${TOMCAT_PASSWORD:-changeme} .
 
@@ -49,12 +49,12 @@ elif [ "$1" == "bx-deploy" ]; then
 elif [ "$1" == "bx-init" ]; then
 
     # create volume for settings
-    bx ic volume-create marmotta-settings
+#    bx ic volume-create marmotta-settings
 
     # run postgres container
     bx ic run --name marmotta-db \
-        -e "POSTGRES_PASSWORD=${DB_PASS:-changeme}" \
-        -e "POSTGRES_USER=${DB_USER:-root}" \
+        -e "POSTGRES_PASSWORD=$DB_PASSWORD" \
+        -e "POSTGRES_USER=$DB_USER" \
         -e "POSTGRES_DB=marmotta" \
         -p 5432:5432 \
         -m 256 registry.eu-gb.bluemix.net/semantic_mediator_container/postgre
