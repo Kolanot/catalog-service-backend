@@ -15,6 +15,7 @@
  ******************************************************************************/
 package at.newmedialab.lmf.search.ldpath.model.functions;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -34,15 +35,11 @@ public class DynamicFunction  extends SelectorFunction<Value> {
 //    	if (args.length < 1 && args.length > 4) {
 //            throw new IllegalArgumentException("wrong usage: " + getSignature());
 //    	}
-//    	if (args.length < 2 && args[0].size() != 1 ) {
-//            throw new IllegalArgumentException("wrong usage: " + getSignature());
-//    	}
-        if (args.length != 2 ) {
+    	if (args.length !=2 && args[0].size() != 1 ) {
             throw new IllegalArgumentException("wrong usage: " + getSignature());
-        }
+    	}
         String fieldName = null;
-        String fieldValue = null;
-    	
+        //String fieldValue = null;
     	for (Value node : args[0]) {
     		if (node instanceof KiWiLiteral) {
     			String value = ((KiWiLiteral) node).stringValue();
@@ -51,23 +48,25 @@ public class DynamicFunction  extends SelectorFunction<Value> {
     		}
     		
     	}
-    	for (Value node : args[1]) {
+    	if ( backend instanceof WildcardAwareBackend) {
+    		Collection<String> values = processArguments(args[1]);
+    		return ((WildcardAwareBackend) backend).createDynLiteralCollection(fieldName, values);
+    	}
+    	else {
+    		return Collections.<Value>emptyList();
+    	}
+    }
+	private Collection<String> processArguments(Collection<Value> values ) {
+		Collection<String> fieldValues = new ArrayList<>();
+    	for (Value node :values) {
     		if (node instanceof KiWiLiteral) {
     			String value = ((KiWiLiteral) node).stringValue();
-    			fieldValue = value;
-    			break;
-    		}
-    		
-    	}
-    	if (fieldName !=null && fieldValue !=null ) {
-    		if ( backend instanceof WildcardAwareBackend) {
-    			return ((WildcardAwareBackend) backend).createDynLiteralCollection(fieldName, fieldValue);
+    			fieldValues.add(value);
     		}
     	}
-
-    	return Collections.<Value>emptyList();
-    }
-
+    	return fieldValues;
+		
+	}
     @Override
     public String getSignature() {
         return "fn:dynamic(name: Value, value: Value]) : DynNodeList";

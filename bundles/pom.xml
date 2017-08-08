@@ -18,8 +18,8 @@
    		<!--  include third -party libs -->
 		<module>../libs/marmotta-alibaba</module>
 		<!-- use selected/required alibaba modules -->
-		<module>../libs/alibaba</module> 
-		<!--  marmotta graph visualization --> 
+		<module>../libs/alibaba</module>
+		<!--  marmotta graph visualization -->
    		<module>../libs/marmotta-vis</module>
    		<!--  semantic search module including dependencies -->
    		<module>../libs/marmotta-search</module>

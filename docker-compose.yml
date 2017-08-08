@@ -1,0 +1,22 @@
+version: '2'
+
+services:
+  marmotta:
+    build:
+      context: .
+      args:
+        DB_HOST: marmotta-db
+        DB_PORT: 5432
+        DB_USER: root
+        DB_PASS: changeme
+    ports:
+      - "8080:8080"
+
+  marmotta-db:
+    image: postgres:9
+    ports:
+      - "5440:5432"
+    environment:
+     - POSTGRES_PASSWORD=changeme
+     - POSTGRES_USER=root
+     - POSTGRES_DB=marmotta

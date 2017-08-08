@@ -83,6 +83,23 @@ public class WildcardAwareBackend extends ContextAwareSesameConnectionBackend {
         }
         return  result;
     }
+    protected Collection<Value> listSubjectsInternal(final RepositoryConnection connection, org.openrdf.model.URI property, Value object, boolean includeInferred, Resource... contexts)
+            throws RepositoryException {
+        final ValueFactory valueFactory = connection.getValueFactory();
+
+       
+        Set<Value> result = new HashSet<>();
+        RepositoryResult<Statement> qResult = connection.getStatements(null, merge((org.openrdf.model.URI) object, valueFactory), merge(property, valueFactory), includeInferred, contexts);
+        try {
+            while(qResult.hasNext()) {
+                result.add(qResult.next().getSubject());
+            }
+        } finally {
+            qResult.close();
+        }
+        return  result;
+    }
+
     public Value createDynLiteral(String name, String value) {
     	return new DynKiwiLiteral(name, value);
     }
@@ -91,5 +108,14 @@ public class WildcardAwareBackend extends ContextAwareSesameConnectionBackend {
     	Value val = new DynKiwiLiteral(name, value);
     	vl.add(val);
     	return vl;
+    }
+    public Collection<Value> createDynLiteralCollection(String name, Collection<String> values) {
+    	HashSet<Value> vl = new HashSet<>();
+    	for ( String value : values ) {
+    		Value val = new DynKiwiLiteral(name, value);
+    		vl.add(val);
+    	}
+    	return vl;
+    	
     }
 }
