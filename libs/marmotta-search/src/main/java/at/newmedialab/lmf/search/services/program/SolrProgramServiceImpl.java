@@ -230,9 +230,6 @@ public class SolrProgramServiceImpl implements SolrProgramService {
         ldpathConfig.addTransformer(Namespaces.NS_LMF_TYPES + "lower_string", new StringTransformer<Value>());
         // transformer for dynamic index values (strings)
         ldpathConfig.addTransformer(Namespaces.NS_LMF_TYPES + "dynamic", new DynamicValueTransformer());
-//        ldpathConfig.addTransformer(Namespaces.NS_LMF_TYPES + "dynamic_i", new DynamicValueTransformer());
-//        ldpathConfig.addTransformer(Namespaces.NS_LMF_TYPES + "dynamic_d", new DynamicValueTransformer());
-//        ldpathConfig.addTransformer(Namespaces.NS_LMF_TYPES + "dynamic_dt", new DynamicValueTransformer());
 }
 
 

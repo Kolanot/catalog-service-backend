@@ -18,7 +18,6 @@ package at.newmedialab.lmf.search.services.indexing;
 import static org.apache.marmotta.commons.sesame.repository.ResourceUtils.getTypes;
 
 import java.io.StringReader;
-import java.net.*;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -32,13 +31,10 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 import org.apache.marmotta.commons.sesame.repository.ResourceUtils;
 import org.apache.marmotta.commons.sesame.transactions.model.TransactionData;
 import org.apache.marmotta.kiwi.model.rdf.KiWiResource;
 import org.apache.marmotta.kiwi.model.rdf.KiWiUriResource;
-import org.apache.marmotta.ldpath.backend.sesame.ContextAwareSesameConnectionBackend;
 import org.apache.marmotta.ldpath.backend.sesame.SesameConnectionBackend;
 import org.apache.marmotta.ldpath.exception.LDPathParseException;
 import org.apache.marmotta.ldpath.model.fields.FieldMapping;
@@ -50,14 +46,19 @@ import org.apache.marmotta.platform.core.qualifiers.event.Created;
 import org.apache.marmotta.platform.core.qualifiers.event.Removed;
 import org.apache.marmotta.platform.core.qualifiers.event.Updated;
 import org.apache.marmotta.platform.core.qualifiers.event.transaction.AfterCommit;
-import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
-import org.openrdf.model.*;
+import org.openrdf.model.BNode;
+import org.openrdf.model.Resource;
+import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.RepositoryResult;
 import org.slf4j.Logger;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 
 import at.newmedialab.lmf.search.api.cores.SolrCoreService;
 import at.newmedialab.lmf.search.api.indexing.SolrIndexingService;
@@ -317,15 +318,6 @@ public class SolrIndexingServiceImpl extends WorkerServiceImpl<SolrCoreRuntime,S
                             		}
                             		doc.addField(dValue.fieldName(), value);
                             	}
-//                            	if ( isDynamic ) {
-//                            		String dynamicFieldName = getDynamicFieldName(backend, dynamicNameTemplate, value);
-//                            		if ( isSinge ) {
-//                            			if ( doc.getField(dynamicFieldName) != null) {
-//                            				break;
-//                            			}
-//                            		}
-//                            		doc.addField(getDynamicFieldName(backend, dynamicNameTemplate, value), getDynamicFieldValue(value));
-//                            	}
                             	else {
 	                                doc.addField(rule.getFieldName(), value);
 	                                if (isSinge) {
@@ -391,34 +383,6 @@ public class SolrIndexingServiceImpl extends WorkerServiceImpl<SolrCoreRuntime,S
         // We use multiValued=true as default.
         return true;
     }
-//    private String getDynamicField(FieldMapping<?, Value> rule) {
-//        if (rule.getFieldConfig() != null && rule.getFieldConfig().containsKey("dynamicField")) {
-//            return rule.getFieldConfig().get("dynamicField");
-//        } 
-//    	return null;
-//    }
-//    private boolean isDynamicOnly(FieldMapping<?, Value> rule) {
-//        if (rule.getFieldConfig() != null && rule.getFieldConfig().containsKey("dynamicOnly")) {
-//        	 return Boolean.parseBoolean(rule.getFieldConfig().get("dynamicOnly"));
-//        } 
-//    	return true;
-//    }
-//    private String getDynamicFieldName(SesameConnectionBackend backend, String nameTemplate, Object value) {
-//    	String[] token = value.toString().split(WildcardAwareBackend.SEPARATOR);
-//    	if ( token.length == 2 ) {
-//    		URI prop = backend.createURI(token[0]);
-//    		String local = prop.getLocalName();
-//    		return nameTemplate.replace("*", local);
-//    	}
-//    	return nameTemplate.replace("*", "");
-//    }
-//    private String getDynamicFieldValue(Object value) {
-//    	String[] token = value.toString().split(WildcardAwareBackend.SEPARATOR);
-//    	if ( token.length == 2 ) {
-//    		return token[1];
-//    	}
-//    	return value.toString();
-//    }
 
     /**
      * Return an appropriate resource id, depending on which backend implementation is used.

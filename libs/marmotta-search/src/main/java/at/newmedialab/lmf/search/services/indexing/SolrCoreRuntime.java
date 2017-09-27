@@ -28,6 +28,7 @@ import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.SolrDocument;
@@ -77,8 +78,16 @@ public final class SolrCoreRuntime extends WorkerRuntime<SolrCoreConfiguration> 
         } else {
             serverLock.lock();
             try {
-                server = new EmbeddedSolrServer(filter.getCores(), config.getName());
-                log.debug("({}) created embedded SolrServer", config.getName());
+            		// use the host from config
+	        		String uri = configuration.getSolrCloudURI();
+	        		if ( uri != null ) {
+	        			server = new CloudSolrClient.Builder().withSolrUrl(uri).build();
+	        		}
+	        		else {
+	        			// TODO: remove embedded
+	        			server = new EmbeddedSolrServer(filter.getCores(), config.getName());
+	        		}
+	            log.debug("({}) created embedded SolrServer", config.getName());
             } finally {
                 serverLock.unlock();
             }
@@ -157,11 +166,12 @@ public final class SolrCoreRuntime extends WorkerRuntime<SolrCoreConfiguration> 
     public void queueDeletion(String docId) {
         serverLock.lock();
         try {
+        		String collection = getConfiguration().getName();
             UpdateRequest update = new UpdateRequest();
             update.setCommitWithin(10000);
             update.deleteById(docId);
             //update.setAction(ACTION.COMMIT, false, false);
-            server.request(update);
+            server.request(update, collection);
         } catch (IOException e) {
             log.warn("I/O exception while removing SOLR document from index",e);
         } catch (SolrServerException e) {

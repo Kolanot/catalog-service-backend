@@ -46,7 +46,10 @@ public class SolrCoreConfiguration extends WorkerConfiguration {
      * String representation of the program
      */
     private String programString;
-
+    /**
+     * the URI pointing to the CloudSolr Server (defaults to http://localhost:8983/solr) 
+     */
+    private String solrCloudURI;
 
     public SolrCoreConfiguration(String name) {
         super(name);
@@ -171,5 +174,13 @@ public class SolrCoreConfiguration extends WorkerConfiguration {
             }
         }
     }
+
+	public String getSolrCloudURI() {
+		return solrCloudURI;
+	}
+
+	public void setSolrCloudURI(String solrCloudURI) {
+		this.solrCloudURI = solrCloudURI;
+	}
 
 }

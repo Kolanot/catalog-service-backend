@@ -125,9 +125,6 @@ public class SolrCoreServiceImpl implements SolrCoreService {
     private LMFSearchFilter searchFilter;
 
     @Inject
-    private ModuleService moduleService;
-
-    @Inject
     private SesameService sesameService;
 
     @Inject @Created
@@ -159,7 +156,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
 
     @PostConstruct
     public void initialize() {
-        log.info("LMF SOLR Configuration Service initializing (engines: {})", configurationService.getListConfiguration("solr.cores"));
+        log.info("Cloud SOLR Configuration Service initializing (engines: {})", configurationService.getListConfiguration("solr.cores"));
 
         engines = new HashMap<String, SolrCoreConfiguration>();
 
@@ -759,24 +756,24 @@ public class SolrCoreServiceImpl implements SolrCoreService {
 
     }
     private void addField(Element schemaNode, Element fieldElement, String fieldName, String solrType, Map<String, String> fieldConfig ) {
-    	if (solrType.equals("dynamic")) {
-    		fieldElement = new Element("dynamicField");
-    		solrType = "string";		// use string as default
-    		if ( fieldConfig != null) {
-    			// when
-    			if (fieldConfig.containsKey("solrType")) {
-    				solrType = fieldConfig.get("solrType");
-    			}
-    			if ( fieldConfig.containsKey("dynamicField") ) {
-    				fieldName = fieldConfig.get("dynamicField");
-    			}
-    		}
-    		else {
-    			// when no name in config - default to string
-    			fieldName = "*_s"; // default to string ...
-    		}
-    		
-    	}
+	    	if (solrType.equals("dynamic")) {
+	    		fieldElement = new Element("dynamicField");
+	    		solrType = "string";		// use string as default
+	    		if ( fieldConfig != null) {
+	    			// when
+	    			if (fieldConfig.containsKey("solrType")) {
+	    				solrType = fieldConfig.get("solrType");
+	    			}
+	    			if ( fieldConfig.containsKey("dynamicField") ) {
+	    				fieldName = fieldConfig.get("dynamicField");
+	    			}
+	    		}
+	    		else {
+	    			// when no name in config - default to string
+	    			fieldName = "*_s"; // default to string ...
+	    		}
+	    		
+	    	}
     	
         fieldElement.setAttribute("name", fieldName);
         // when dynamic, we need a valid solrType
@@ -894,13 +891,13 @@ public class SolrCoreServiceImpl implements SolrCoreService {
      * @param coreName
      */
     private void registerSolrCore(String coreName) {
-        log.info("registering core {} with embedded SOLR service", coreName);
+        log.info("registering collection {} with Cloud SOLR service", coreName);
 
         if(searchFilter.getCores().getCore(coreName) == null) {
-        	//CoreDescriptor x = new Co
-        	File f = getCoreDirectory(coreName).getAbsoluteFile();
-        	Path p = f.toPath();
-            CoreDescriptor d = new CoreDescriptor(searchFilter.getCores(), coreName, p);
+        		//CoreDescriptor x = new Co
+	        	File f = getCoreDirectory(coreName).getAbsoluteFile();
+	        	Path p = f.toPath();
+            //CoreDescriptor d = new CoreDescriptor(searchFilter.getCores().getHostName(), coreName, p);
             SolrCore core = searchFilter.getCores().create(coreName, new HashMap<String, String>());
             searchFilter.getCores().reload(coreName);//, false);
         } else {
