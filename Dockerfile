@@ -1,6 +1,7 @@
 FROM tomcat:7-jre8
 MAINTAINER Salzburg Research <nimble-srfg@salzburgresearch.at>
 
+ARG DB_NAME
 ARG DB_HOST
 ARG DB_PORT
 ARG DB_USER
@@ -14,6 +15,7 @@ COPY ./webapp/target/catalog-service.war /usr/share/marmotta/marmotta.war
 
 # Marmotta configuration
 ENV CONF_PATH /var/lib/marmotta/system-config.properties
+ENV DB_NAME $DB_NAME
 ENV DB_HOST $DB_HOST
 ENV DB_PORT $DB_PORT
 ENV DB_USER $DB_USER

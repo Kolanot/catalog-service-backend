@@ -7,20 +7,23 @@ if [ "$1" == "run" ]; then
     # run docker compose
     docker-compose up --build
 
-elif [ "$1" == "bx-deploy" ]; then
+elif [ "$1" == "bx-build-kube" ]; then
 
     # build maven project
-    mvn clean install -DskipTests
+#    mvn clean install -DskipTests
 
     # create docker image on Bluemix
     bx ic build \
-        -t registry.eu-gb.bluemix.net/semantic_mediator_container/marmotta-backend:latest \
-        --build-arg DB_HOST=marmotta-db \
-        --build-arg DB_PORT=5432 \
+        -t registry.eu-gb.bluemix.net/semantic_mediator_container/marmotta-backend-kube:latest \
+        --build-arg DB_NAME=${DB_NAME:-marmotta} \
+        --build-arg DB_HOST=${DB_HOST:-marmotta-db} \
+        --build-arg DB_PORT=${DB_PORT:-5432} \
         --build-arg DB_USER=${DB_USER:-root} \
         --build-arg DB_PASSWORD=${DB_PASSWORD:-changeme} \
         --build-arg TOMCAT_USER=${TOMCAT_USER:-admin} \
         --build-arg TOMCAT_PASSWORD=${TOMCAT_PASSWORD:-changeme} .
+
+elif [ "$1" == "bx-deploy" ]; then
 
     # stop and delete current container (necessary for update)
     echo "********* Stopping and removing old container *********"
