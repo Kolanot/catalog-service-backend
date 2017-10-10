@@ -10,7 +10,7 @@ ARG TOMCAT_USER
 ARG TOMCAT_PASSWORD
 
 # copy application data
-COPY ./docker/marmotta.xml /usr/local/tomcat/conf/Catalina/localhost/
+COPY ./docker/server.xml /usr/local/tomcat/conf/server.xml
 COPY ./webapp/target/catalog-service.war /usr/share/marmotta/marmotta.war
 
 # Marmotta configuration

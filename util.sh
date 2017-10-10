@@ -7,14 +7,14 @@ if [ "$1" == "run" ]; then
     # run docker compose
     docker-compose up --build
 
-elif [ "$1" == "bx-build-kube" ]; then
+elif [ "$1" == "kube-build" ]; then
 
     # build maven project
-#    mvn clean install -DskipTests
+    mvn clean install -DskipTests
 
     # create docker image on Bluemix
     bx ic build \
-        -t registry.eu-gb.bluemix.net/semantic_mediator_container/marmotta-backend-kube:latest \
+        -t registry.eu-gb.bluemix.net/nimble/marmotta-backend-kube:latest \
         --build-arg DB_NAME=${DB_NAME:-marmotta} \
         --build-arg DB_HOST=${DB_HOST:-marmotta-db} \
         --build-arg DB_PORT=${DB_PORT:-5432} \
@@ -22,6 +22,10 @@ elif [ "$1" == "bx-build-kube" ]; then
         --build-arg DB_PASSWORD=${DB_PASSWORD:-changeme} \
         --build-arg TOMCAT_USER=${TOMCAT_USER:-admin} \
         --build-arg TOMCAT_PASSWORD=${TOMCAT_PASSWORD:-changeme} .
+
+elif [ "$1" == "kube-deploy" ]; then
+
+    kubectl apply -f kubernetes/deploy.yml
 
 elif [ "$1" == "bx-deploy" ]; then
 
