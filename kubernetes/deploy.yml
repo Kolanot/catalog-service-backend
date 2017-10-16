@@ -12,10 +12,7 @@ spec:
       app: nimble-platform
       name: marmotta
   strategy:
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 1
-    type: RollingUpdate
+    type: Recreate
   revisionHistoryLimit: 5
   template:
     metadata:
@@ -25,6 +22,7 @@ spec:
     spec:
       imagePullSecrets:
         - name: bluemix-default-secret
+      restartPolicy: Always
       containers:
       - image: registry.eu-gb.bluemix.net/nimble/marmotta-backend-kube
         imagePullPolicy: Always

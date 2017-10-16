@@ -9,9 +9,8 @@ ARG DB_PASSWORD
 ARG TOMCAT_USER
 ARG TOMCAT_PASSWORD
 
-# copy application data
+# add config
 COPY ./docker/server.xml /usr/local/tomcat/conf/server.xml
-COPY ./webapp/target/catalog-service.war /usr/share/marmotta/marmotta.war
 
 # Marmotta configuration
 ENV CONF_PATH /var/lib/marmotta/system-config.properties
@@ -24,6 +23,9 @@ ENV DB_PASSWORD $DB_PASSWORD
 # Tomcat configuration
 ENV TOMCAT_USER $TOMCAT_USER
 ENV TOMCAT_PASSWORD $TOMCAT_PASSWORD
+
+# addls application
+COPY ./webapp/target/catalog-service.war /usr/share/marmotta/marmotta.war
 
 COPY ./entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["bash", "/entrypoint.sh"]
