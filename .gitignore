@@ -200,3 +200,4 @@ hs_err_pid*
 .gradle
 init_deploy.sh
 init_kubernetes_deploy.sh
+init_deploy_kubernetes.sh
