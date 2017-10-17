@@ -25,7 +25,7 @@ elif [ "$1" == "kube-build" ]; then
 
 elif [ "$1" == "kube-deploy" ]; then
 
-    kubectl apply -f kubernetes/deploy.yml
+    kubectl -n prod apply -f kubernetes/deploy.yml
 
 elif [ "$1" == "bx-deploy" ]; then
 

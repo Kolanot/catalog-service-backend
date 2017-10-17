@@ -24,7 +24,7 @@ spec:
         - name: bluemix-default-secret
       restartPolicy: Always
       containers:
-      - image: registry.eu-gb.bluemix.net/nimble/marmotta-backend-kube
+      - image: registry.eu-gb.bluemix.net/nimble/marmotta-backend-kube:latest
         imagePullPolicy: Always
         name: marmotta
         ports:
