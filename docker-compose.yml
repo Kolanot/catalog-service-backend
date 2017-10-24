@@ -5,6 +5,7 @@ services:
     build:
       context: .
       args:
+        DB_NAME: marmotta
         DB_HOST: marmotta-db
         DB_PORT: 5432
         DB_USER: root
