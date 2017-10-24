@@ -59,6 +59,7 @@
         <titan.version>0.4.2</titan.version>
     </properties>
 
+
     <build>
         <finalName>catalog-service</finalName>
         <pluginManagement>
@@ -444,6 +445,14 @@
             <id>archetype-it</id>
             <properties>
                 <marmotta.port>64586</marmotta.port>
+            </properties>
+        </profile>
+        
+        <profile>
+            <!-- disable the PDS Tests on SRFG's Jenkins Site -->
+            <id>nimble-ldp</id>
+            <properties>
+            		<marmotta.port>8082</marmotta.port>
             </properties>
         </profile>
     </profiles>
