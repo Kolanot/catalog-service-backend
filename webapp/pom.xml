@@ -452,6 +452,7 @@
             <!-- disable the PDS Tests on SRFG's Jenkins Site -->
             <id>nimble-ldp</id>
             <properties>
+            		<marmotta.home>/data/nimble</marmotta.home>
             		<marmotta.port>8082</marmotta.port>
             </properties>
         </profile>
