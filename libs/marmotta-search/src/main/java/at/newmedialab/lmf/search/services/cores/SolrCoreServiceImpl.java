@@ -198,6 +198,10 @@ public class SolrCoreServiceImpl implements SolrCoreService {
      * @param engine
      */
     private void loadSolrCoreConfiguration(String name, SolrCoreConfiguration engine) {
+    		if ( configurationService.getStringConfiguration("solr.cloud.uri") != null) {
+    			// use the cloud service
+    			engine.setSolrCloudURI(configurationService.getStringConfiguration("solr.cloud.uri"));
+    		}
         engine.setThreads(configurationService.getIntConfiguration("solr." + name.toLowerCase() + ".workers", 2));
         engine.setUpdateDependencies(configurationService.getBooleanConfiguration("solr." + name.toLowerCase() + ".update_dependencies", false));
         engine.setClearBeforeReschedule(configurationService.getBooleanConfiguration("solr." + name.toLowerCase() + ".clear_before_reschedule", true));
