@@ -5,7 +5,7 @@ import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
 import org.apache.marmotta.platform.core.api.config.ConfigurationService;
-import org.apache.marmotta.platform.core.events.SystemStartupEvent;
+import org.apache.marmotta.platform.core.events.ConfigurationServiceInitEvent;
 
 @ApplicationScoped
 public class StartupConfigurator {
@@ -15,16 +15,31 @@ public class StartupConfigurator {
 	public StartupConfigurator() {
 		// TODO Auto-generated constructor stub
 	}
-	public void onSystemStartup(@Observes SystemStartupEvent event) {
+	public void onSystemStartup(@Observes ConfigurationServiceInitEvent event) {
+		// database settings
+		String[] databaseVal = new String [] 
+				{"database.type",
+				 "database.url",
+				 "database.user",
+				 "database.password" };
+		// host 
+		String[] hostVal = new String [] 
+				{"kiwi.path",
+				 "kiwi.context",
+				 "kiwi.host" };
 		
-		String[] databaseVal = new String [] {"database.type","database.url","database.user","database.password" };
-		String[] hostVal = new String [] {"kiwi.path","kiwi.context","kiwi.host" };
-		
-		if ( processEnvironmentVariables(databaseVal)) {
-			config.setBooleanConfiguration("kiwi.setup.database", Boolean.TRUE);
+		boolean dbConfigured = config.getBooleanConfiguration("kiwi.setup.database.env", false);
+		if ( !dbConfigured) {
+			if ( processEnvironmentVariables(databaseVal)) {
+				config.setBooleanConfiguration("kiwi.setup.database", Boolean.TRUE);
+				config.setBooleanConfiguration("kiwi.setup.database.env", Boolean.TRUE);
+			}
 		}
-		if ( processEnvironmentVariables(hostVal)) {
-			config.setBooleanConfiguration("kiwi.setup.host", Boolean.TRUE);
+		boolean hostConfigured = config.getBooleanConfiguration("kiwi.setup.host");
+		if ( !hostConfigured) {
+			if ( processEnvironmentVariables(hostVal)) {
+				config.setBooleanConfiguration("kiwi.setup.host", Boolean.TRUE);
+			}
 		}
 		/*
 			security.enabled
@@ -39,7 +54,13 @@ public class StartupConfigurator {
 			kiwi.setup.host
 		*/
 	}
-	
+	private String checkVariable(String variable) {
+		String value = System.getenv(variable);
+		if ( value == null) {
+			value = System.getProperty(variable);
+		}
+		return value;
+	}
 
 	private boolean processEnvironmentVariables(String[] variables) {
 		boolean variablesPresent = true;
@@ -47,12 +68,8 @@ public class StartupConfigurator {
 		
 		for ( int i = 0; i < variables.length; i++ ) {
 			// try to get from environment
-			values[i] = System.getenv(variables[i]);
+			values[i] = checkVariable(variables[i]);
 		
-			if ( values[i]  == null ) {
-				values[i] = System.getProperty(variables[i]);
-			}
-			
 			if ( values[i] == null ) {
 				variablesPresent = false;
 			}
