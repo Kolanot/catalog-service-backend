@@ -28,7 +28,7 @@ import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
-import org.apache.solr.client.solrj.impl.CloudSolrClient;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.SolrDocument;
@@ -81,7 +81,7 @@ public final class SolrCoreRuntime extends WorkerRuntime<SolrCoreConfiguration> 
             		// use the host from config
 	        		String uri = configuration.getSolrCloudURI();
 	        		if ( uri != null ) {
-	        			server = new CloudSolrClient.Builder().withSolrUrl(uri).build();
+	        			server = new HttpSolrClient.Builder().withBaseSolrUrl(uri).build();
 	        		}
 	        		else {
 	        			// TODO: remove embedded
