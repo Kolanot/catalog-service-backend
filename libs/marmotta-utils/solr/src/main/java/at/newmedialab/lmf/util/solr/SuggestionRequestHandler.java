@@ -139,14 +139,4 @@ public class SuggestionRequestHandler extends SearchHandler implements SolrCoreA
     public String getDescription() {
         return "This handler creates suggestions for a faceted search";
     }
-
-    @Override
-    public String getSource() {
-        return "no source";
-    }
-
-    @Override
-    public String getVersion() {
-        return "0.0.1";
-    }
 }
