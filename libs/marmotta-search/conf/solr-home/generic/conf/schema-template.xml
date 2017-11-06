@@ -63,6 +63,68 @@
             (int, float, boolean, string...)
        1.6: useDocValuesAsStored defaults to true.
     -->
+    <fields>
+        <!-- Valid attributes for fields:
+          name: mandatory - the name for the field
+          type: mandatory - the name of a previously defined type from the <types> section
+          indexed: true if this field should be indexed (searchable or sortable)
+          stored: true if this field should be retrievable
+          compressed: [false] if this field should be stored using gzip compression
+            (this will only apply if the field type is compressable; among
+            the standard field types, only TextField and StrField are)
+          multiValued: true if this field may contain multiple values per document
+          omitNorms: (expert) set to true to omit the norms associated with
+            this field (this disables length normalization and index-time
+            boosting for the field, and saves some memory).  Only full-text
+            fields or fields that need an index-time boost need norms.
+          termVectors: [false] set to true to store the term vector for a given field.
+            When using MoreLikeThis, fields used for similarity should be stored for
+            best performance.
+        -->
+
+        <!-- Database ID of the indexed resource -->
+        <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false"/>
+
+        <field name="_version_" type="long" indexed="true" stored="true"/>
+
+        <!--  KiWi Resouce URI and anonymous ID -->
+        <field name="lmf.uri" type="string" indexed="true" stored="true" multiValued="false"/>
+        <field name="lmf.anon_id" type="string" indexed="true" stored="true" multiValued="false"/>
+
+        <!--  creation date -->
+        <field name="lmf.created"  type="date" indexed="true" stored="true" multiValued="false"/>
+
+        <!--  last modified date -->
+        <field name="lmf.modified"  type="date" indexed="true" stored="true" multiValued="false"/>
+
+        <!--  date of indexing -->
+        <field name="lmf.indexed"  type="date" indexed="true" stored="true" multiValued="false"/>
+
+        <!-- store all dependencies of a document, i.e. the resources used to create the semantic search index entry -->
+        <field name="lmf.dependencies" type="string" indexed="true" stored="false" multiValued="true"/>
+
+        <!--  RDF Type -->
+        <field name="lmf.type" type="uri" indexed="true" stored="true" multiValued="true"/>
+
+        <!--  author / creator -->
+        <field name="lmf.author" type="uri" indexed="true" stored="true" multiValued="false"/>
+
+        <!-- SPELLCHECK -->
+        <field name="lmf.spellcheck" type="text_ws_lower" indexed="true" stored="true" multiValued="true"/>
+
+        <!--  KiWi Knowledgespace -->
+        <field name="lmf.context" type="string" indexed="true" stored="true" multiValued="false"/>
+
+        <field name="lmf.text_all" type="text_generic" indexed="true" stored="false" multiValued="true" termVectors="true"/>
+
+        <!-- dynamic field to index the coordinates of LatLonType (location)-->
+        <dynamicField name="*__coordinate" type="tdouble" indexed="true" stored="false"/>
+        <!-- dynamic field to index and store coordinates of a Point (point) -->
+        <dynamicField name="*__d" type="double" indexed="true" stored="true"/>
+        <dynamicField name="*__i" type="int" indexed="true" stored="true"/>
+         <!-- dynamic field to allow random sort order, use e.g. with ?sort=random_123 -->
+        <dynamicField name="random_*" type="random" indexed="true" stored="false"/>
+    </fields>
 
     <!-- Valid attributes for fields:
      name: mandatory - the name for the field
