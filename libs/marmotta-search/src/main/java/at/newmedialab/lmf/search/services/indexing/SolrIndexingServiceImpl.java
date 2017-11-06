@@ -296,7 +296,7 @@ public class SolrIndexingServiceImpl extends WorkerServiceImpl<SolrCoreRuntime,S
                         if (boostValues.size() > 1) {
                             log.warn("found more than one boostFactor for <{}>, using {}", resource, docBoost);
                         }
-                        doc.setDocumentBoost(docBoost);
+                        //doc.setDocumentBoost(docBoost);
                     }
                 }
 
@@ -331,7 +331,8 @@ public class SolrIndexingServiceImpl extends WorkerServiceImpl<SolrCoreRuntime,S
                             try {
                                 if (b != null) {
                                 	if ( doc.getField(rule.getFieldName()) != null ) {
-                                		doc.getField(rule.getFieldName()).setBoost(Float.parseFloat(b));
+                                	    // boost's are no longer supported!
+                                		//doc.getField(rule.getFieldName()).setBoost(Float.parseFloat(b));
                                 	}
                                 }
                             } catch (NumberFormatException e) {
