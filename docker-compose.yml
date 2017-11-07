@@ -5,13 +5,16 @@ services:
     build:
       context: .
       args:
-        DB_NAME: marmotta
-        DB_HOST: marmotta-db
-        DB_PORT: 5432
-        DB_USER: root
-        DB_PASSWORD: changeme
         TOMCAT_USER: admin
         TOMCAT_PASSWORD: changeme
+    environment:
+      - "database.user=root"
+      - "database.password=changeme"
+      - "database.url=jdbc:postgresql://marmotta-db:5432/marmotta?prepareThreshold=3"
+      - "database.type=postgres"
+#      - "kiwi.path=/marmotta"
+#      - "kiwi.context=localhost:8080"
+#      - "kiwi.host=localhost:8080"
     ports:
       - "8080:8080"
 
