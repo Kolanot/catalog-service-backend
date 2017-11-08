@@ -15,13 +15,30 @@
  */
 package at.newmedialab.lmf.search.webservices;
 
-import at.newmedialab.lmf.search.api.cores.SolrCoreService;
-import at.newmedialab.lmf.search.api.indexing.SolrIndexingService;
-import at.newmedialab.lmf.search.api.program.SolrProgramService;
-import at.newmedialab.lmf.search.services.cores.SolrCoreConfiguration;
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import com.google.common.io.CharStreams;
+import java.io.StringReader;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
 import org.apache.marmotta.commons.sesame.repository.ResourceUtils;
 import org.apache.marmotta.ldpath.api.backend.RDFBackend;
 import org.apache.marmotta.ldpath.backend.sesame.SesameConnectionBackend;
@@ -36,16 +53,13 @@ import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.slf4j.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.*;
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+
+import at.newmedialab.lmf.search.api.cores.SolrCoreService;
+import at.newmedialab.lmf.search.api.indexing.SolrIndexingService;
+import at.newmedialab.lmf.search.api.program.SolrProgramService;
+import at.newmedialab.lmf.search.services.cores.SolrCoreConfiguration;
 
 /**
  * Add file description here!
@@ -77,14 +91,13 @@ public class SolrCoreWebService {
     @POST
     @Path("/{name}")
     @Consumes("text/plain")
-    public Response createCore(@PathParam("name") final String name, @Context HttpServletRequest request) {
+    public Response createCore(@PathParam("name") final String name, final String programString, @Context HttpServletRequest request) {
 
         if (solrCoreService.hasSolrCore(name))
             // return 403 forbidden if the engine already exists
             return Response.status(Response.Status.FORBIDDEN).entity("engine with name " + name + " already exists; delete it first").build();
         else {
             try {
-                final String programString = CharStreams.toString(request.getReader());
 
                 // Check if the program is valid
                 final Program<Value> program = programService.parseProgram(new StringReader(programString));
@@ -103,10 +116,6 @@ public class SolrCoreWebService {
                 t.start();
 
                 return Response.ok().build();
-            } catch (IOException ex) {
-                log.error("error while uploading new enhancement program {}", name, ex);
-
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("error while uploading new enhancement program: " + ex.getMessage()).build();
             } catch (LDPathParseException e) {
                 log.warn("invalid program for enhancer {}: {}. Core NOT changed", name, e.getMessage());
                 return Response.status(Response.Status.BAD_REQUEST).entity("Could not parse program: " + e.getMessage()).build();
@@ -117,15 +126,14 @@ public class SolrCoreWebService {
     @PUT
     @Path("/{name}")
     @Consumes("text/plain")
-    public Response updateCore(@PathParam("name") final String name, @Context HttpServletRequest request) {
+    public Response updateCore(@PathParam("name") final String name, final String programString, @Context HttpServletRequest request) {
         if (solrCoreService.hasSolrCore(name)) {
             try {
-                final String newProgram = CharStreams.toString(request.getReader());
                 final SolrCoreConfiguration engine = solrCoreService.getSolrCore(name);
 
                 // Check if the program is valid
-                engine.setProgram(programService.parseProgram(new StringReader(newProgram)));
-                engine.setProgramString(newProgram);
+                engine.setProgram(programService.parseProgram(new StringReader(programString)));
+                engine.setProgramString(programString);
 
                 Thread t = new Thread("core '" + name + "' update") {
                     @Override
@@ -136,9 +144,6 @@ public class SolrCoreWebService {
                 t.setDaemon(true);
                 t.start();
                 return Response.ok().build();
-            } catch (IOException e) {
-                log.error("error while uploading new search program {}", name, e);
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("error while uploading new search program: " + e.getMessage()).build();
             } catch (LDPathParseException e) {
                 log.warn("invalid replacement program for solr core {}: {}. Core NOT changed", name, e.getMessage());
                 return Response.status(Response.Status.BAD_REQUEST).entity("Could not parse program: " + e.getMessage()).build();
@@ -219,9 +224,10 @@ public class SolrCoreWebService {
     @POST
     @Consumes("text/plain")
     @Produces("text/plain")
-    public Response checkProgram(@Context HttpServletRequest request) {
+    public Response checkProgram(String programString, @Context HttpServletRequest request) {
         try {
-            final Program<Value> program = programService.parseProgram(request.getReader());
+            // Check if the program is valid
+            final Program<Value> program = programService.parseProgram(new StringReader(programString));
             RepositoryConnection conn = sesameService.getConnection();
             try {
                 conn.begin();
@@ -234,8 +240,8 @@ public class SolrCoreWebService {
             }
         } catch (RepositoryException ex) {
             return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Triple-Store Error: " + ex.getMessage()).build();
-        } catch (IOException ex) {
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity("error while uploading program: " + ex.getMessage()).build();
+//        } catch (IOException ex) {
+//            return Response.status(Status.INTERNAL_SERVER_ERROR).entity("error while uploading program: " + ex.getMessage()).build();
         } catch (LDPathParseException e) {
             return Response.status(Status.BAD_REQUEST).entity(e.getLocalizedMessage()).build();
         }
@@ -253,11 +259,13 @@ public class SolrCoreWebService {
     @Consumes("text/plain")
     @Produces("application/json")
     @SuppressWarnings("unchecked")
-    public Response debugProgram(@QueryParam("context") String[] contextURI, @QueryParam("context[]") String[] contextURIarr, @Context HttpServletRequest request) {
+    public Response debugProgram(@QueryParam("context") String[] contextURI, @QueryParam("context[]") String[] contextURIarr, final String programString) {
         try {
             final String[] cs = contextURI != null ? contextURI : contextURIarr;
             log.debug("Debugging RdfPath program");
-            final Program<Value> program = programService.parseProgram(request.getReader());
+            // Check if the program is valid
+            final Program<Value> program = programService.parseProgram(new StringReader(programString));
+
             log.trace("Program parsed, found {} fields", program.getFields().size());
 
             HashMap<String, Object> result = new HashMap<String, Object>();
@@ -298,8 +306,6 @@ public class SolrCoreWebService {
                 conn.close();
             }
         } catch (RepositoryException ex) {
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity("error while debugging program: " + ex.getMessage()).build();
-        } catch (IOException ex) {
             return Response.status(Status.INTERNAL_SERVER_ERROR).entity("error while debugging program: " + ex.getMessage()).build();
         } catch (LDPathParseException e) {
             return Response.status(Status.BAD_REQUEST).entity((e.getCause() != null ? e.getCause() : e).getLocalizedMessage()).build();
