@@ -418,8 +418,10 @@ public class SolrCoreServiceImpl implements SolrCoreService {
 
             try {
                 // update schema.xml and solrconfig.xml with the properties of the program
-                createSolrConfigXml(engine);
-                createSchemaXml(engine);
+                if (engine.getSolrCloudURI() == null) {
+//                  createSolrConfigXml(engine);
+//                  createSchemaXml(engine);
+              }
 
                 reloadSolrCore(engine.getName());
 
@@ -482,8 +484,8 @@ public class SolrCoreServiceImpl implements SolrCoreService {
             if (activated) {
                 // update schema.xml and solrconfig.xml with the properties of the program
                 if (engine.getSolrCloudURI() == null) {
-                    createSolrConfigXml(engine);
-                    createSchemaXml(engine);
+//                    createSolrConfigXml(engine);
+//                    createSchemaXml(engine);
                 }
             }
 
@@ -668,9 +670,13 @@ public class SolrCoreServiceImpl implements SolrCoreService {
             Document doc = parser.build(schemaTemplate);
 
             Element schemaNode = doc.getRootElement();
-            Element fieldsNode = schemaNode.getChild("fields");
-            if (!schemaNode.getName().equals("schema") || fieldsNode == null)
-                throw new MarmottaException(schemaTemplate + " is an invalid SOLR schema file");
+            if ( schemaNode.getAttribute("version").getDoubleValue() < 1.6) {
+                // 
+                Element fieldsNode = schemaNode.getChild("fields");
+                if (!schemaNode.getName().equals("schema") || fieldsNode == null)
+                    throw new MarmottaException(schemaTemplate + " is an invalid SOLR schema file");
+                
+            }
 
             schemaNode.setAttribute("name", engine.getName());
 
@@ -698,72 +704,6 @@ public class SolrCoreServiceImpl implements SolrCoreService {
                     Element fieldElement = new Element("field");
                     addField(schemaNode, fieldElement, fieldName, solrType, fieldMapping.getFieldConfig());
                 }
-                // Element fieldElement = new Element("field");
-                // fieldElement.setAttribute("name", fieldName);
-                //
-                //
-                // if ( fieldName.startsWith("__")) {
-                // fieldElement = new Element("dynamicField");
-                // fieldElement.setAttribute("name", "*"+fieldName);
-                // }
-                //
-                // fieldElement.setAttribute("type", solrType);
-                // // Set the default properties
-                // fieldElement.setAttribute("stored", "true");
-                // fieldElement.setAttribute("indexed", "true");
-                // fieldElement.setAttribute("multiValued", "true");
-                //
-                // // FIXME: Hardcoded Stuff!
-                // if (solrType.equals("location")) {
-                // fieldElement.setAttribute("indexed", "true");
-                // fieldElement.setAttribute("multiValued", "false");
-                // }
-                //
-                // final Map<String, String> fieldConfig = fieldMapping.getFieldConfig();
-                // // Handle extra field configuration
-                // if (fieldConfig != null) {
-                // for (Map.Entry<String,String> attr : fieldConfig.entrySet()) {
-                // if (SOLR_FIELD_OPTIONS.contains(attr.getKey())) {
-                // fieldElement.setAttribute(attr.getKey(), attr.getValue());
-                // }
-                // }
-                // }
-                // final Map<String, String> fieldConfig = fieldMapping.getFieldConfig();
-                //
-                // if (fieldConfig != null &&
-                // fieldConfig.keySet().contains(SOLR_COPY_FIELD_OPTION)) {
-                // String[] copyFields =
-                // fieldConfig.get(SOLR_COPY_FIELD_OPTION).split("\\s*,\\s*");
-                // for (String copyField : copyFields) {
-                // if (copyField.trim().length() > 0) { // ignore 'empty' fields
-                // Element copyElement = new Element("copyField");
-                // copyElement.setAttribute("source", fieldName);
-                // copyElement.setAttribute("dest", copyField.trim());
-                // schemaNode.addContent(copyElement);
-                // }
-                // }
-                // } else {
-                // Element copyElement = new Element("copyField");
-                // copyElement.setAttribute("source", fieldName);
-                // copyElement.setAttribute("dest", "lmf.text_all");
-                // schemaNode.addContent(copyElement);
-                // }
-                //
-                // //for suggestions, copy all fields to lmf.spellcheck (used for spellcheck and
-                // querying);
-                // //only facet is a supported type at the moment
-                // if (fieldConfig != null &&
-                // fieldConfig.keySet().contains(SOLR_SUGGESTION_FIELD_OPTION)) {
-                // String suggestionType = fieldConfig.get(SOLR_SUGGESTION_FIELD_OPTION);
-                // if(suggestionType.equals("facet")) {
-                // Element copyElement = new Element("copyField");
-                // copyElement.setAttribute("source", fieldName);
-                // copyElement.setAttribute("dest", "lmf.spellcheck");
-                // schemaNode.addContent(copyElement);
-                // } else {
-                // log.error("suggestionType "+suggestionType+" not supported");
-                // }
-                // }
             }
 
             if (!schemaFile.exists() || schemaFile.canWrite()) {
@@ -783,7 +723,17 @@ public class SolrCoreServiceImpl implements SolrCoreService {
         }
 
     }
-
+    private boolean fieldAlreadyExists(Element schemaNode, String fieldType, String fieldName) {
+        for (Element child : schemaNode.getChildren()) {
+            if ( child.getName().equals(fieldType)) {
+                if ( child.getAttributeValue("name").equals(fieldName)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+        
+    }
     private void addField(Element schemaNode, Element fieldElement, String fieldName, String solrType,
             Map<String, String> fieldConfig) {
         if (solrType.equals("dynamic")) {
@@ -801,7 +751,12 @@ public class SolrCoreServiceImpl implements SolrCoreService {
                 // when no name in config - default to string
                 fieldName = "*_s"; // default to string ...
             }
+           
 
+        }
+        if ( fieldAlreadyExists(schemaNode, fieldElement.getName(), fieldName)) {
+            // do not output an existing field
+            return;
         }
 
         fieldElement.setAttribute("name", fieldName);
@@ -826,7 +781,12 @@ public class SolrCoreServiceImpl implements SolrCoreService {
             }
         }
         Element fieldsNode = schemaNode.getChild("fields");
-        fieldsNode.addContent(fieldElement);
+        if ( fieldsNode != null ) {
+            fieldsNode.addContent(fieldElement);
+        }
+        else {
+            schemaNode.addContent(fieldElement);
+        }
 
         if (fieldConfig != null && fieldConfig.keySet().contains(SOLR_COPY_FIELD_OPTION)) {
             String[] copyFields = fieldConfig.get(SOLR_COPY_FIELD_OPTION).split("\\s*,\\s*");
