@@ -811,7 +811,6 @@
       <str name="indent">true</str>
     </lst>
   </requestHandler>
-  <requestHandler name="/admin/" class="org.apache.solr.handler.admin.AdminHandlers" />
 
 
   <!-- A Robust Example

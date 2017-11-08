@@ -123,6 +123,39 @@
     <field name="_root_" type="string" indexed="true" stored="false" docValues="false" />
     <field name="_text_" type="text_general" indexed="true" stored="false" multiValued="true"/>
 
+    <!--  MARMOTTA-SEARCH related fields BEGIN 
+          KiWi Resouce URI and anonymous ID -->
+    <field name="lmf.uri" type="string" indexed="true" stored="true" multiValued="false"/>
+    <field name="lmf.anon_id" type="string" indexed="true" stored="true" multiValued="false"/>
+
+    <!--  creation date -->
+    <field name="lmf.created"  type="date" indexed="true" stored="true" multiValued="false"/>
+
+    <!--  last modified date -->
+    <field name="lmf.modified"  type="date" indexed="true" stored="true" multiValued="false"/>
+
+    <!--  date of indexing -->
+    <field name="lmf.indexed"  type="date" indexed="true" stored="true" multiValued="false"/>
+
+    <!-- store all dependencies of a document, i.e. the resources used to create the semantic search index entry -->
+    <field name="lmf.dependencies" type="string" indexed="true" stored="false" multiValued="true"/>
+
+    <!--  RDF Type -->
+    <field name="lmf.type" type="uri" indexed="true" stored="true" multiValued="true"/>
+
+    <!--  author / creator -->
+    <field name="lmf.author" type="uri" indexed="true" stored="true" multiValued="false"/>
+
+    <!-- SPELLCHECK -->
+    <field name="lmf.spellcheck" type="text_ws" indexed="true" stored="true" multiValued="true"/>
+
+    <!--  KiWi Knowledgespace -->
+    <field name="lmf.context" type="string" indexed="true" stored="true" multiValued="false"/>
+
+    <field name="lmf.text_all" type="text_general" indexed="true" stored="false" multiValued="true" termVectors="true"/>
+
+    <!--  MARMOTTA-SEARCH related fields END -->
+
     <!-- Only enabled in the "schemaless" data-driven example (assuming the client
          does not know what fields may be searched) because it's very expensive to index everything twice. -->
     <copyField source="*" dest="_text_"/>
