@@ -86,7 +86,7 @@ public class SolrProgramServiceImpl implements SolrProgramService {
         typeMap.put(Namespaces.NS_XSD + "anyURI", "uri");
         typeMap.put(Namespaces.NS_XSD + "string", "string");
 
-        typeMap.put(Namespaces.NS_LMF_TYPES + "text", "text_generic");
+        typeMap.put(Namespaces.NS_LMF_TYPES + "text", "text_general");
         typeMap.put(Namespaces.NS_LMF_TYPES + "text_ar", "text_ar");
         typeMap.put(Namespaces.NS_LMF_TYPES + "text_bg", "text_bg");
         typeMap.put(Namespaces.NS_LMF_TYPES + "text_ca", "text_ca");
@@ -131,7 +131,7 @@ public class SolrProgramServiceImpl implements SolrProgramService {
 
         typeMap.put(Namespaces.NS_LMF_TYPES + "color", "rgbColor");
 
-        typeMap.put(Namespaces.NS_LMF_TYPES + "lower_string", "lower_string");
+        typeMap.put(Namespaces.NS_LMF_TYPES + "lower_string", "lowercase");
         typeMap.put(Namespaces.NS_LMF_TYPES + "reverse_path_ngrams", "reverse_path_ngrams");
         //
         typeMap.put(Namespaces.NS_LMF_TYPES + "dynamic", "dynamic");
