@@ -420,7 +420,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
                 // update schema.xml and solrconfig.xml with the properties of the program
                 if (engine.getSolrCloudURI() == null) {
 //                  createSolrConfigXml(engine);
-//                  createSchemaXml(engine);
+                  createSchemaXml(engine);
               }
 
                 reloadSolrCore(engine.getName());
@@ -485,7 +485,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
                 // update schema.xml and solrconfig.xml with the properties of the program
                 if (engine.getSolrCloudURI() == null) {
 //                    createSolrConfigXml(engine);
-//                    createSchemaXml(engine);
+                    createSchemaXml(engine);
                 }
             }
 
@@ -665,7 +665,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
         SAXBuilder parser = new SAXBuilder(XMLReaders.NONVALIDATING);
         File schemaTemplate = new File(getCoreDirectory(engine.getName()),
                 "conf" + File.separator + "schema-template.xml");
-        File schemaFile = new File(getCoreDirectory(engine.getName()), "conf" + File.separator + "schema.xml");
+        File schemaFile = new File(getCoreDirectory(engine.getName()), "conf" + File.separator + "managed-schema");
         try {
             Document doc = parser.build(schemaTemplate);
 
@@ -729,6 +729,12 @@ public class SolrCoreServiceImpl implements SolrCoreService {
                 if ( child.getAttributeValue("name").equals(fieldName)) {
                     return true;
                 }
+            }
+        }
+        if ( schemaNode.getName()!="fields") {
+            Element fieldsNode = schemaNode.getChild("fields");
+            if ( fieldsNode != null ) {
+                return fieldAlreadyExists(fieldsNode, fieldType, fieldName);
             }
         }
         return false;
@@ -894,7 +900,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
             Path p = f.toPath();
             // CoreDescriptor d = new CoreDescriptor(searchFilter.getCores().getHostName(),
             // coreName, p);
-            SolrCore core = searchFilter.getCores().create(coreName, p, new HashMap<String, String>(), false);
+            SolrCore core = searchFilter.getCores().create(coreName, new HashMap<String, String>());
             searchFilter.getCores().reload(coreName);// , false);
         } else {
             log.error("core {} already registered, cannot reregister it", coreName);
