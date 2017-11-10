@@ -1,2 +1,2 @@
-at.newmedialab.lmf.search.ldpath.model.functions.DynamicFunction
-at.newmedialab.lmf.search.ldpath.model.functions.DynamicFieldFunction
+org.apache.marmotta.search.ldpath.model.functions.DynamicFunction
+org.apache.marmotta.search.ldpath.model.functions.DynamicFieldFunction

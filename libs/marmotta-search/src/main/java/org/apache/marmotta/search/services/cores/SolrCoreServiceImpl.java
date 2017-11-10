@@ -63,6 +63,8 @@ import org.apache.marmotta.search.api.cores.SolrCoreService;
 import org.apache.marmotta.search.api.program.SolrProgramService;
 import org.apache.marmotta.search.exception.CoreAlreadyExistsException;
 import org.apache.marmotta.search.filters.LMFSearchFilter;
+import org.apache.marmotta.util.solr.SuggestionRequestHandler;
+import org.apache.marmotta.util.solr.suggestion.params.SuggestionRequestParams;
 import org.apache.solr.core.CoreDescriptor;
 import org.apache.solr.core.SolrCore;
 import org.jdom2.Document;
@@ -78,9 +80,6 @@ import org.slf4j.Logger;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
-
-import at.newmedialab.lmf.util.solr.SuggestionRequestHandler;
-import at.newmedialab.lmf.util.solr.suggestion.params.SuggestionRequestParams;
 
 /**
  * Add file description here!

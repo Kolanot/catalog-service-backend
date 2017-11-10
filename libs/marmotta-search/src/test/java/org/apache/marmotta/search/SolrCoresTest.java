@@ -131,10 +131,10 @@ public class SolrCoresTest {
 
         // test if the schema file contains all the expected field definitions
         String schemaXmlContent = FileUtils.readFileToString(schemaXml, "UTF-8");
-        for (FieldMapping mapping : engine.getProgram().getFields()) {
+        for (FieldMapping<?,Value> mapping : engine.getProgram().getFields()) {
             String fName = mapping.getFieldName();
             
-            //assertTrue(schemaXmlContent.contains((String.format("field name=\"%s\"", fName))));
+            assertTrue(schemaXmlContent.contains((String.format("field name=\"%s\"", fName))));
         }
 
         // data directory
