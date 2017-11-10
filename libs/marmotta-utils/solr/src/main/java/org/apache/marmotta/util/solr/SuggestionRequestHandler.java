@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package at.newmedialab.lmf.util.solr;
+package org.apache.marmotta.util.solr;
 
-import at.newmedialab.lmf.util.solr.suggestion.params.SuggestionRequestParams;
-import at.newmedialab.lmf.util.solr.suggestion.service.SuggestionService;
+import org.apache.marmotta.util.solr.suggestion.params.SuggestionRequestParams;
+import org.apache.marmotta.util.solr.suggestion.service.SuggestionService;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;

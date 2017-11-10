@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package at.newmedialab.lmf.util.solr.suggestion.result;
+package org.apache.marmotta.util.solr.suggestion.result;
 
-import at.newmedialab.lmf.util.solr.suggestion.service.FieldAnalyzerService;
+import org.apache.marmotta.util.solr.suggestion.service.FieldAnalyzerService;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.common.util.SimpleOrderedMap;
 import org.apache.solr.core.SolrCore;

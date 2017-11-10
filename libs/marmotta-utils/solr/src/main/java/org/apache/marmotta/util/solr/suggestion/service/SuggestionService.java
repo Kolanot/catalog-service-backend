@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package at.newmedialab.lmf.util.solr.suggestion.service;
+package org.apache.marmotta.util.solr.suggestion.service;
 
-import at.newmedialab.lmf.util.solr.suggestion.params.SuggestionResultParams;
-import at.newmedialab.lmf.util.solr.suggestion.result.SuggesionResultSingle;
-import at.newmedialab.lmf.util.solr.suggestion.result.SuggestionResult;
-import at.newmedialab.lmf.util.solr.suggestion.result.SuggestionResultFactory;
+import org.apache.marmotta.util.solr.suggestion.params.SuggestionResultParams;
+import org.apache.marmotta.util.solr.suggestion.result.SuggesionResultSingle;
+import org.apache.marmotta.util.solr.suggestion.result.SuggestionResult;
+import org.apache.marmotta.util.solr.suggestion.result.SuggestionResultFactory;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.FacetParams;
