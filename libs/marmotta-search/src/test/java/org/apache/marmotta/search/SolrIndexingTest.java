@@ -52,15 +52,17 @@ public class SolrIndexingTest {
     @Before
     public void setUp() throws Exception {
         lmf = new JettyMarmotta("/");
+        configurationService = lmf.getService(ConfigurationService.class);
+        
         solrProgramService = lmf.getService(SolrProgramService.class);
         solrCoreService = lmf.getService(SolrCoreService.class);
-        configurationService = lmf.getService(ConfigurationService.class);
         importService = lmf.getService(ImportService.class);
         solrIndexingService = lmf.getService(SolrIndexingService.class);
         searchFilter = lmf.getService(LMFSearchFilter.class);
 
 
         configurationService.setBooleanConfiguration("ldcache.enabled", false);
+
     }
 
     @After
@@ -90,7 +92,7 @@ public class SolrIndexingTest {
             assertTrue(solrCoreService.hasSolrCore(CORE_NAME));
 
             // change the local_only parameter of the new core, because the resources might not be considered local
-            configurationService.setBooleanConfiguration("solr."+CORE_NAME+".local_only", false);
+            configurationService.setBooleanConfiguration("solr.core."+CORE_NAME+".local_only", false);
             Thread.sleep(1000);
             // check if local_only has been disabled as expected
             Iterator<SesameFilter<Resource>> it = engine.getFilters().iterator();

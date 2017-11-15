@@ -2,6 +2,7 @@ package org.apache.marmotta.search;
 
 import org.apache.marmotta.ldpath.exception.LDPathParseException;
 import org.apache.marmotta.ldpath.model.programs.Program;
+import org.apache.marmotta.platform.core.api.config.ConfigurationService;
 import org.apache.marmotta.platform.core.test.base.JettyMarmotta;
 import org.apache.marmotta.search.api.cores.SolrCoreService;
 import org.apache.marmotta.search.api.program.SolrProgramService;
@@ -24,12 +25,17 @@ public class SolrTemplatesTest {
     private static JettyMarmotta lmf;
     private static SolrProgramService solrProgramService;
     private static SolrCoreService solrCoreService;
+    private static ConfigurationService configurationService;
     
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
         lmf = new JettyMarmotta("/");
+        configurationService = lmf.getService(ConfigurationService.class);
+        configurationService.removeConfiguration("solr.cloud.uri");
+        
         solrProgramService = lmf.getService(SolrProgramService.class);
         solrCoreService = lmf.getService(SolrCoreService.class);
+
     }
 
     @AfterClass

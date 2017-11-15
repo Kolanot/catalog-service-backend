@@ -57,15 +57,18 @@ public class SolrDependenciesTest {
     @Before
     public void setUp() throws Exception {
         lmf = new JettyMarmotta("/");
+        configurationService = lmf.getService(ConfigurationService.class);
+        configurationService.removeConfiguration("solr.cloud.uri");
+        
         solrProgramService = lmf.getService(SolrProgramService.class);
         solrCoreService = lmf.getService(SolrCoreService.class);
-        configurationService = lmf.getService(ConfigurationService.class);
         importService = lmf.getService(ImportService.class);
         solrIndexingService = lmf.getService(SolrIndexingService.class);
         searchFilter = lmf.getService(LMFSearchFilter.class);
         sesameService = lmf.getService(SesameService.class);
 
         configurationService.setBooleanConfiguration("ldcache.enabled", false);
+
     }
 
     @After
@@ -95,8 +98,8 @@ public class SolrDependenciesTest {
             assertTrue(solrCoreService.hasSolrCore(CORE_NAME));
 
             // change the local_only parameter of the new core, because the resources might not be considered local
-            configurationService.setBooleanConfiguration("solr."+CORE_NAME+".local_only", false);
-            configurationService.setBooleanConfiguration("solr." + CORE_NAME + ".update_dependencies", true);
+            configurationService.setBooleanConfiguration("solr.core."+CORE_NAME+".local_only", false);
+            configurationService.setBooleanConfiguration("solr.core." + CORE_NAME + ".update_dependencies", true);
             Thread.sleep(1000);
 
             // check if local_only has been disabled as expected

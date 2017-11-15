@@ -2,6 +2,7 @@ package org.apache.marmotta.search;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.marmotta.commons.sesame.model.Namespaces;
 import org.apache.marmotta.ldpath.exception.LDPathParseException;
 import org.apache.marmotta.ldpath.model.fields.FieldMapping;
 import org.apache.marmotta.ldpath.model.programs.Program;
@@ -22,6 +23,7 @@ import org.openrdf.model.Value;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.not;
@@ -35,6 +37,7 @@ import static org.junit.Assert.*;
 public class SolrCoresTest {
 
     private static final String CORE_NAME = "schema";
+    private static final URI DYNAMIC_URI = URI.create(Namespaces.NS_LMF_TYPES + "dynamic");
     private static JettyMarmotta lmf;
     private static SolrProgramService solrProgramService;
     private static SolrCoreService solrCoreService;
@@ -44,9 +47,11 @@ public class SolrCoresTest {
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
         lmf = new JettyMarmotta("/");
+        configurationService = lmf.getService(ConfigurationService.class);
+        configurationService.removeConfiguration("solr.cloud.uri");
+        
         solrProgramService = lmf.getService(SolrProgramService.class);
         solrCoreService = lmf.getService(SolrCoreService.class);
-        configurationService = lmf.getService(ConfigurationService.class);
         searchFilter = lmf.getService(LMFSearchFilter.class);
     }
 
@@ -133,8 +138,20 @@ public class SolrCoresTest {
         String schemaXmlContent = FileUtils.readFileToString(schemaXml, "UTF-8");
         for (FieldMapping<?,Value> mapping : engine.getProgram().getFields()) {
             String fName = mapping.getFieldName();
-            
-            assertTrue(schemaXmlContent.contains((String.format("field name=\"%s\"", fName))));
+            if ( mapping.getFieldType().equals(DYNAMIC_URI)) {
+                // dynamic field, name is not in the field list!
+                if ( mapping.getFieldConfig()!=null ) {
+                    String dynamicFieldName = mapping.getFieldConfig().get("dynamicField");
+                    if ( dynamicFieldName != null ) {
+                        assertTrue(String.format("Field [%s] not found", dynamicFieldName),
+                                schemaXmlContent.contains((String.format("dynamicField name=\"%s\"", dynamicFieldName))));
+                    }
+                }
+            }
+            else {
+                assertTrue(String.format("Field [%s] not found", fName),
+                    schemaXmlContent.contains((String.format("field name=\"%s\"", fName))));
+            }
         }
 
         // data directory
@@ -188,7 +205,7 @@ public class SolrCoresTest {
             // Here come the fun
             SolrCoreConfiguration engine = solrCoreService.createSolrCore(CORE_NAME, programString);
 
-            configurationService.setBooleanConfiguration("solr."+CORE_NAME+".update_dependencies", true);
+            configurationService.setBooleanConfiguration("solr.core."+CORE_NAME+".update_dependencies", true);
             Thread.sleep(1000);
             assertTrue(engine.isUpdateDependencies());
 
