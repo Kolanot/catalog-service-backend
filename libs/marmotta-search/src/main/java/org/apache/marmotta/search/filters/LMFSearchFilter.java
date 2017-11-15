@@ -153,7 +153,7 @@ public class LMFSearchFilter implements MarmottaHttpFilter {
         try {
             Context ctx_env = (Context)new InitialContext().lookup("java:comp/env");
             Context ctx_solr = ctx_env.createSubcontext("solr");
-            ctx_solr.bind("home", new Reference("java.lang.String", "at.newmedialab.lmf.search.filters.SolrHomeFactory", null));
+            ctx_solr.bind("home", new Reference("java.lang.String", "org.apache.marmotta.search.filters.SolrHomeFactory", null));
         } catch (NamingException e) {
             log.error("naming error while registering SOLR home",e);
 
