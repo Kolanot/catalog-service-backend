@@ -31,6 +31,7 @@ import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION;
 import org.apache.solr.client.solrj.request.UpdateRequest;
@@ -78,16 +79,22 @@ public final class SolrCoreRuntime extends WorkerRuntime<SolrCoreConfiguration> 
         } else {
             serverLock.lock();
             try {
+                //server = configuration.getSolrClient();
             		// use the host from config
-	        		String uri = configuration.getSolrCloudURI();
-	        		if ( uri != null ) {
-	        			server = new HttpSolrClient.Builder().withBaseSolrUrl(uri).build();
-	        		}
-	        		else {
-	        			// TODO: remove embedded
-	        			server = new EmbeddedSolrServer(filter.getCores(), config.getName());
-	        		}
-	            log.debug("({}) created embedded SolrServer", config.getName());
+                switch (configuration.getSolrClientType()) {
+                case EMBEDDED:
+                    server = new EmbeddedSolrServer(filter.getCores(), config.getName());
+                    log.debug("({}) created embedded SolrServer", config.getName());
+                    break;
+                case REMOTE:
+                    server = new HttpSolrClient.Builder().withBaseSolrUrl(configuration.getSolrClientURI()).build();
+                    log.debug("({}) created Remote SolrServer", config.getName());
+                    break;
+                case CLOUD:
+                    server = new CloudSolrClient.Builder().withSolrUrl(configuration.getSolrClientURI()).build();
+                    log.debug("({}) created Cloud SolrServer", config.getName());
+                    break;
+                }
             } finally {
                 serverLock.unlock();
             }
