@@ -19,6 +19,8 @@ import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Value;
 
+import com.google.common.base.Strings;
+
 import at.newmedialab.lmf.worker.model.WorkerConfiguration;
 
 /**
@@ -221,10 +223,13 @@ public class SolrCoreConfiguration extends WorkerConfiguration {
     }
 
 	public String getSolrClientURI() {
-		return solrCloudURI;
+		return Strings.emptyToNull(solrCloudURI);
 	}
 
 	public void setSolrClientURI(String solrCloudURI) {
+	    if ( solrCloudURI.endsWith("/")) {
+	        solrCloudURI = solrCloudURI.substring(0, solrCloudURI.length()-1);
+	    }
 		this.solrCloudURI = solrCloudURI;
 	}
 }
