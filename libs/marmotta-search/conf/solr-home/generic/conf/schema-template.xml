@@ -125,7 +125,7 @@
 
     <!--  MARMOTTA-SEARCH related fields BEGIN 
           KiWi Resouce URI and anonymous ID -->
-    <field name="lmf.uri" type="string" indexed="true" stored="true" multiValued="false"/>
+    <field name="lmf.uri" type="uri" indexed="true" stored="true" multiValued="false"/>
     <field name="lmf.anon_id" type="string" indexed="true" stored="true" multiValued="false"/>
 
     <!--  creation date -->
