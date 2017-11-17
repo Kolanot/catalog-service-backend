@@ -121,7 +121,6 @@ public class SolrCoreWebService {
             }
         }
     }
-
     @PUT
     @Path("/{name}")
     @Consumes("text/plain")
@@ -130,14 +129,13 @@ public class SolrCoreWebService {
             try {
                 final SolrCoreConfiguration engine = solrCoreService.getSolrCore(name);
 
-                // Check if the program is valid
-                engine.setProgram(programService.parseProgram(new StringReader(programString)));
-                engine.setProgramString(programString);
-
+                // Check if the program is valid (will trigger LDPathParseException)
+                programService.parseProgram(new StringReader(programString));
+                // update the core in the background
                 Thread t = new Thread("core '" + name + "' update") {
                     @Override
                     public void run() {
-                        solrCoreService.updateSolrCore(engine);
+                        solrCoreService.updateSolrCore(engine, programString);
                     };
                 };
                 t.setDaemon(true);
@@ -145,7 +143,7 @@ public class SolrCoreWebService {
                 return Response.ok().build();
             } catch (LDPathParseException e) {
                 log.warn("invalid replacement program for solr core {}: {}. Core NOT changed", name, e.getMessage());
-                return Response.status(Response.Status.BAD_REQUEST).entity("Could not parse program: " + e.getMessage()).build();
+                return Response.status(Response.Status.BAD_REQUEST).entity("Could not parse program: " + e.getLocalizedMessage()).build();
             }
         }
         return Response.status(Response.Status.NOT_FOUND).entity("enhancer with name " + name + " does not exists").build();

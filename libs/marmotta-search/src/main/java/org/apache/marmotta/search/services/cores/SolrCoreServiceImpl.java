@@ -20,7 +20,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -39,7 +38,6 @@ import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.marmotta.commons.sesame.filter.SesameFilter;
 import org.apache.marmotta.commons.sesame.filter.resource.UriPrefixFilter;
@@ -56,23 +54,23 @@ import org.apache.marmotta.platform.core.model.filter.MarmottaLocalFilter;
 import org.apache.marmotta.platform.core.qualifiers.event.Created;
 import org.apache.marmotta.platform.core.qualifiers.event.Removed;
 import org.apache.marmotta.platform.core.qualifiers.event.Updated;
+import org.apache.marmotta.platform.core.util.CDIContext;
 import org.apache.marmotta.platform.ldcache.model.filter.MarmottaNotCachedFilter;
 import org.apache.marmotta.search.api.cores.SolrCoreService;
 import org.apache.marmotta.search.api.program.SolrProgramService;
 import org.apache.marmotta.search.exception.CoreAlreadyExistsException;
 import org.apache.marmotta.search.filters.LMFSearchFilter;
 import org.apache.marmotta.search.services.cores.SolrCoreConfiguration.SolrClientType;
-import org.apache.marmotta.search.services.program.SolrProgramServiceImpl;
 import org.apache.marmotta.util.solr.SuggestionRequestHandler;
-import org.apache.marmotta.util.solr.schema.SolrCopyField;
 import org.apache.marmotta.util.solr.schema.SolrCoreAdministration;
 import org.apache.marmotta.util.solr.schema.SolrField;
 import org.apache.marmotta.util.solr.schema.SolrSchema;
 import org.apache.marmotta.util.solr.suggestion.params.SuggestionRequestParams;
-import org.apache.solr.analysis.SolrAnalyzer;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.core.SolrCore;
+import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -163,20 +161,11 @@ public class SolrCoreServiceImpl implements SolrCoreService {
 
         engines = new HashMap<String, SolrCoreConfiguration>();
         // check the type of the client (EMBEDDED, REMOTE(singlenode),
-        // CLOUD(solr_cluster)
-        String serverType = configurationService.getStringConfiguration("solr.server_type");
-        // get the URI of the remote solr instance (for REMOTE && CLOUD)
-        String serverUri = configurationService.getStringConfiguration("solr.server_uri");
-
-        if (serverUri == null || serverUri.length() == 0) {
-            // when no URI provided switch to EMBEDDED
-            serverType = SolrCoreConfiguration.SolrClientType.EMBEDDED.name();
-            serverUri = null;
-        }
 
         // load all enhancement engines from the configuration
         for (String engineName : configurationService.getListConfiguration("solr.cores")) {
-            SolrCoreConfiguration engine = loadExistingSolrCoreConfiguration(engineName);
+            SolrCoreConfiguration engine = new SolrCoreConfiguration(engineName);
+            loadSolrCoreConfiguration(engineName, engine);
 
             // ensure the core file system structures exist and the core is activated in
             // SOLR
@@ -199,66 +188,6 @@ public class SolrCoreServiceImpl implements SolrCoreService {
 
     public void startup(@Observes SystemStartupEvent event) {
         // trigger initialisation
-    }
-
-    /**
-     * Create the configuration for an existing SolrCore, use the parameters stored
-     * in the configuration
-     * 
-     * @param name
-     * @return
-     */
-    private SolrCoreConfiguration loadExistingSolrCoreConfiguration(String name) {
-        SolrCoreConfiguration engine = new SolrCoreConfiguration(name);
-        engine.setThreads(configurationService.getIntConfiguration("solr.core." + name.toLowerCase() + ".workers", 2));
-        engine.setUpdateDependencies(configurationService
-                .getBooleanConfiguration("solr.core." + name.toLowerCase() + ".update_dependencies", false));
-        engine.setClearBeforeReschedule(configurationService
-                .getBooleanConfiguration("solr.core." + name.toLowerCase() + ".clear_before_reschedule", true));
-        engine.setQueueSize(
-                configurationService.getIntConfiguration("solr.core." + name.toLowerCase() + ".queuesize", 100000));
-
-        // initialise filters
-        Set<SesameFilter<Resource>> filters = new HashSet<SesameFilter<Resource>>();
-        if (configurationService.getBooleanConfiguration("solr.core." + name.toLowerCase() + ".local_only", true)) {
-            filters.add(MarmottaLocalFilter.getInstance());
-        }
-        if (configurationService.getBooleanConfiguration("solr.core." + name.toLowerCase() + ".omit_cached", true)) {
-            filters.add(MarmottaNotCachedFilter.getInstance());
-        }
-        if (configurationService.getListConfiguration("solr.core." + name.toLowerCase() + ".accept_prefixes")
-                .size() > 0) {
-            filters.add(new UriPrefixFilter(new HashSet<String>(configurationService
-                    .getListConfiguration("solr.core." + name.toLowerCase() + ".accept_prefixes"))));
-        }
-
-        if (!configurationService.getStringConfiguration("solr.core." + name.toLowerCase() + ".program", "")
-                .equals(engine.getProgramString())) {
-            engine.setProgramString(
-                    configurationService.getStringConfiguration("solr.core." + name.toLowerCase() + ".program", ""));
-
-            try {
-                engine.setProgram(solrProgramService.parseProgram(new StringReader(engine.getProgramString())));
-            } catch (LDPathParseException e) {
-                log.error("error parsing path program for engine {}", engine.getName(), e);
-            }
-
-        }
-        //
-        String serverType = configurationService
-                .getStringConfiguration("solr.core." + name.toLowerCase() + ".server_type", "EMBEDDED");
-        engine.setSolrClientType(serverType);
-        String serverUri = configurationService
-                .getStringConfiguration("solr.core." + name.toLowerCase() + ".server_uri");
-        engine.setSolrClientURI(serverUri);
-
-        if (configurationService.getBooleanConfiguration("solr.core." + name.toLowerCase() + ".schedule_program_filter",
-                false)) {
-            filters.add(new LDPathProgramFilter(engine, sesameService));
-        }
-
-        engine.setFilters(filters);
-        return engine;
     }
 
     /**
@@ -305,12 +234,22 @@ public class SolrCoreServiceImpl implements SolrCoreService {
             }
 
         }
-        //
-        String serverType = configurationService
-                .getStringConfiguration("solr.core." + name.toLowerCase() + ".server_type", "EMBEDDED");
+        // use server type, configurable for every core
+        // CLOUD(solr_cluster)
+        String serverType = configurationService.getStringConfiguration("solr.server_type");
+        // get the URI of the remote solr instance (for REMOTE && CLOUD)
+        String serverUri = configurationService.getStringConfiguration("solr.server_uri");
+
+        if (serverUri == null || serverUri.length() == 0) {
+            // when no URI provided switch to EMBEDDED
+            serverType = SolrCoreConfiguration.SolrClientType.EMBEDDED.name();
+            serverUri = null;
+        }
+        serverType = configurationService
+                .getStringConfiguration("solr.core." + name.toLowerCase() + ".server_type", serverType);
         engine.setSolrClientType(serverType);
-        String serverUri = configurationService
-                .getStringConfiguration("solr.core." + name.toLowerCase() + ".server_uri");
+        serverUri = configurationService
+                .getStringConfiguration("solr.core." + name.toLowerCase() + ".server_uri", serverUri);
         engine.setSolrClientURI(serverUri);
 
         if (configurationService.getBooleanConfiguration("solr.core." + name.toLowerCase() + ".schedule_program_filter",
@@ -395,7 +334,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
                             if (key.startsWith("solr.core." + entry.getKey().toLowerCase())) {
                                 loadSolrCoreConfiguration(entry.getKey(), entry.getValue());
 
-                                reloadSolrCore(entry.getKey());
+                                // reloadSolrCore(entry.getKey());
 
                                 coreUpdatedEvent.fire(entry.getValue());
                             }
@@ -491,49 +430,37 @@ public class SolrCoreServiceImpl implements SolrCoreService {
 
     /**
      * Update the configuration of the enhancement engine given as argument.
+     * with the new program string
      * <p/>
      * Note that this method merely updates the configuration and does not
      * automatically re-run the enhancement process for all resources.
      *
-     * @param engine
+     * @param engine The configuration to update
+     * @param program The changed program string
      */
     @Override
-    public void updateSolrCore(SolrCoreConfiguration engine) {
-        if (engines.containsKey(engine.getName())) {
-            engines.put(engine.getName(), engine);
-
-            storeSolrCoreConfiguration(engine);
-
-            try {
-                // update schema.xml and solrconfig.xml with the properties of the program
-                if (engine.getSolrClientURI() == null) {
-                    // createSolrConfigXml(engine);
-                    createSchemaXml(engine);
+    public void updateSolrCore(SolrCoreConfiguration engine, String program) {
+        try {
+            // parse the program again
+            Program<Value> newProgram = solrProgramService.parseProgram(new StringReader(program));
+            if (engines.containsKey(engine.getName())) {
+                // update the engine
+                if ( updateSolrCore(engine, newProgram) ) {
+                    // store the new program in the engine's config 
+                    engine.setProgram(newProgram);
+                    engine.setProgramString(program);
+                    // store the config in marmotta's config
+                    storeSolrCoreConfiguration(engine);
                 }
-
-                reloadSolrCore(engine.getName());
-
-                coreUpdatedEvent.fire(engine);
-            } catch (Exception e) {
-                log.error("error while initialising SOLR core {}", engine.getName(), e);
-                removeSolrCore(engine);
             }
+
+        } catch (MarmottaException e) {
+            log.error("error while updating SOLR core {}", engine.getName(), e);
+            reloadSolrCore(engine);
+        } catch (LDPathParseException e) {
+            log.error("error while updating SOLR core {}", engine.getName(), e);
+            reloadSolrCore(engine);
         }
-    }
-
-    /**
-     * Update the configuration of the enhancement engine given as argument
-     * 
-     * @param engine
-     * @param newProgram
-     *            the new program for the engine, replacing the stored engine
-     */
-    public void updateSolrCore(SolrCoreConfiguration engine, Program<Value> newProgram) {
-        // parse the current schema and identify the fields, dynamicFields, copyFields
-        // created on behalf of the actual program (engine.getProgram())
-        //
-
-        SolrSchema existing = new SolrSchema(engine.getName());
 
     }
 
@@ -548,27 +475,38 @@ public class SolrCoreServiceImpl implements SolrCoreService {
     @Override
     public void removeSolrCore(SolrCoreConfiguration engine) {
         if (engines.containsKey(engine.getName())) {
-            engines.remove(engine.getName());
-
-            List<String> enabledEngines = new ArrayList<String>(
-                    configurationService.getListConfiguration("solr.cores"));
-            enabledEngines.remove(engine.getName());
-            configurationService.setListConfiguration("solr.cores", enabledEngines);
-
-            // fire event to allow cleaning up the core, and then unregister and delete the
-            // core directory afterwards
-            coreRemovedEvent.fire(engine);
-
-            unregisterSolrCore(engine.getName());
-
-            try {
-                removeCoreDirectory(engine.getName());
-            } catch (IOException ex) {
-                log.error("I/O error while trying to remove directory for SOLR core {}", engine.getName());
-                log.info("Exception details", ex);
+            
+            if (unregisterSolrCore(engine)) {
+                // remove from the list of configurations
+                engines.remove(engine.getName());
+                // remove from marmotta config
+                List<String> enabledEngines = new ArrayList<String>(
+                        configurationService.getListConfiguration("solr.cores"));
+                enabledEngines.remove(engine.getName());
+                configurationService.setListConfiguration("solr.cores", enabledEngines);
+                // notify workers
+                coreRemovedEvent.fire(engine);
             }
-
         }
+    }
+    @Override
+    public SolrClient getSolrClient(SolrCoreConfiguration config) {
+        SolrClient server;
+        switch (config.getSolrClientType()) {
+        case REMOTE:
+            server = new HttpSolrClient.Builder().withBaseSolrUrl(config.getSolrClientURI()).build();
+//            log.debug("({}) created Remote SolrServer", getName());
+            break;
+        case CLOUD:
+            server = new CloudSolrClient.Builder().withSolrUrl(config.getSolrClientURI()).build();
+//            log.debug("({}) created Cloud SolrServer", getName());
+            break;
+        default:
+            server = new EmbeddedSolrServer(searchFilter.getCores(), config.getName());
+            LMFSearchFilter filter = CDIContext.getInstance(LMFSearchFilter.class);
+            break;
+        }
+        return server;
     }
 
     /**
@@ -580,25 +518,11 @@ public class SolrCoreServiceImpl implements SolrCoreService {
      * @param engine
      */
     private void createAndActivateCore(SolrCoreConfiguration engine) {
-        boolean activated;
+        // boolean activated;
 
         try {
-            if (engine.getSolrClientType() == SolrClientType.EMBEDDED) {
-                registerSolrCore(engine);
-//                activated = ensureCoreDirectory(engine.getName(), true);
-//                if (activated) {
-//                    // directory has been created/updated
-//                    // update schema.xml and solrconfig.xml with the properties of the program
-//                    // createSolrConfigXml(engine);
-//                    createSchemaXml(engine);
-//
-//                }
-            } else {
-                // check whether the remote system contains the core ...
-            }
-
-            // register core with SOLR
-            registerSolrCore(engine.getName());
+            //
+            registerSolrCore(engine);
 
         } catch (MarmottaException ex) {
             log.error("I/O error while trying to set up directory for SOLR core {}", engine.getName());
@@ -609,7 +533,6 @@ public class SolrCoreServiceImpl implements SolrCoreService {
         }
     }
 
-    
     private File getCoreDirectory(String coreName) {
         String solrHomeName = configurationService.getStringConfiguration("solr.home");
         String coreHomeName = solrHomeName + File.separator + coreName;
@@ -707,11 +630,6 @@ public class SolrCoreServiceImpl implements SolrCoreService {
         return true;
     }
 
-    private void removeCoreDirectory(String coreName) throws IOException {
-        File coreHome = getCoreDirectory(coreName);
-        FileUtils.deleteDirectory(coreHome);
-    }
-
     /**
      * This method takes as argument a File representing the SOLR home directory and
      * unpacks the kiwi-solr-data zip file that is contained in the kiwi-core.jar
@@ -767,6 +685,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
      *
      * @param engine
      *            the engine configuration
+     * @deprecated
      */
     private void createSchemaXml(SolrCoreConfiguration engine) throws MarmottaException {
         log.info("generating schema.xml for search program {}", engine.getName());
@@ -832,7 +751,15 @@ public class SolrCoreServiceImpl implements SolrCoreService {
         }
 
     }
-
+    /**
+     * check whether a field already exists
+     * @todo REMOVE
+     * @param schemaNode
+     * @param fieldType
+     * @param fieldName
+     * @return
+     * @deprecated
+     */
     private boolean fieldAlreadyExists(Element schemaNode, String fieldType, String fieldName) {
         for (Element child : schemaNode.getChildren()) {
             if (child.getName().equals(fieldType)) {
@@ -850,7 +777,16 @@ public class SolrCoreServiceImpl implements SolrCoreService {
         return false;
 
     }
-
+    /**
+     * Method to create a field/dynamic field in the schema.xml file
+     * handles copyField for suggestion
+     * @param schemaNode
+     * @param fieldElement
+     * @param fieldName
+     * @param solrType
+     * @param fieldConfig
+     * @deprecated
+     */
     private void addField(Element schemaNode, Element fieldElement, String fieldName, String solrType,
             Map<String, String> fieldConfig) {
         if (solrType.equals("dynamic")) {
@@ -940,7 +876,8 @@ public class SolrCoreServiceImpl implements SolrCoreService {
     /**
      * Create/update the solrconfig.xml file for the given core according to the
      * core configuration.
-     *
+     * @TODO: REMOVE
+     * @deprecated
      * @param engine
      *            the solr core configuration
      */
@@ -996,38 +933,21 @@ public class SolrCoreServiceImpl implements SolrCoreService {
     }
 
     /**
-     * Register the core with the name given as argument with the SOLR core admin.
-     *
-     * @param coreName
-     */
-    private void registerSolrCore(String coreName) {
-        log.info("registering collection {} with Cloud SOLR service", coreName);
-
-        if (searchFilter.getCores().getCore(coreName) == null) {
-            // CoreDescriptor x = new Co
-            File f = getCoreDirectory(coreName).getAbsoluteFile();
-            Path p = f.toPath();
-            // CoreDescriptor d = new CoreDescriptor(searchFilter.getCores().getHostName(),
-            // coreName, p);
-            SolrCore core = searchFilter.getCores().create(coreName, new HashMap<String, String>());
-            searchFilter.getCores().reload(coreName);// , false);
-        } else {
-            log.error("core {} already registered, cannot reregister it", coreName);
-        }
-
-    }
-    /**
-     * Registers 
+     * Registers
+     * 
      * @param config
      * @throws MarmottaException
      */
     private void registerSolrCore(SolrCoreConfiguration config) throws MarmottaException {
-        SolrCoreAdministration admin = new SolrCoreAdministration(config.getSolrClient());
+        SolrCoreAdministration admin = new SolrCoreAdministration(getSolrClient(config));
         try {
             if (!admin.getCores().contains(config.getName())) {
-                File home = getCoreDirectory(config.getName());
-                if (! home.exists() ) {
-                    ensureCoreDirectory(config.getName(), true);
+                if (config.getSolrClientType().equals(SolrClientType.EMBEDDED)) {
+                    // can crate the file system only in EMBEDDED mode
+                    File home = getCoreDirectory(config.getName());
+                    if (!home.exists()) {
+                        ensureCoreDirectory(config.getName(), true);
+                    }
                 }
                 // create the core
                 admin.create(config.getName(), getCoreDirectory(config.getName()).getAbsolutePath());
@@ -1039,62 +959,191 @@ public class SolrCoreServiceImpl implements SolrCoreService {
                 admin.reload(config.getName());
             }
 
-        } catch (SolrServerException e) {
-            throw new MarmottaException(e);
         } catch (IOException e) {
             throw new MarmottaException(e);
-        }
-    }
-    private void processSchema(SolrSchema schema, Program<Value> program) throws SolrServerException {
-        for ( FieldMapping<?,Value> map : program.getFields()) {
-            if ( ! schema.hasField(map.getFieldName())) {
-                SolrField field = new SolrField();
-                field.setName(map.getFieldName());
-                field.setType(SolrProgramServiceImpl.xsdSolrTypeMap.get(map.getFieldType().toString()));
-                field.setProperty("stored", Boolean.TRUE);
-                field.setProperty("multiValued", Boolean.TRUE);
-                field.setProperty("indexed", Boolean.TRUE);
-                if ( map.getFieldConfig()!= null ) {
-                    for (String key : map.getFieldConfig().keySet()) {
-                        field.setProperty(key, map.getFieldConfig().get(key));
-                    }
-                }
-                if (! schema.hasType(field.getType())) {
-                    throw new SolrServerException(String.format("Cannot add field %s, the requested field type [%s] is not present", field.getName(), field.getType()));
-                }
-                    
-                if ( schema.addField(field) ) {
-                    if (! schema.hasCopyField("*")) {
-                        if ( schema.hasField("lmf.text_all")) {
-                            SolrCopyField cf = new SolrCopyField(field.getName(), "lmf.text_all");
-                        }
-                        else {
-                            SolrCopyField cf = new SolrCopyField(field.getName(), "_TEXT_");
-                        }
-                    }
-                }
-                System.out.println(String.format("Need to create %s with type %s", map.getFieldName(), map.getFieldType()));
-            }               
+        } catch (SolrServerException e) {
+            throw new MarmottaException(e);
         }
     }
 
-    private void reloadSolrCore(String coreName) {
-        log.info("reloading core {} in embedded SOLR service", coreName);
+    private boolean updateSolrCore(SolrCoreConfiguration config, Program<Value> newProgram) throws MarmottaException {
 
-        searchFilter.getCores().reload(coreName);
+        SolrCoreAdministration admin = new SolrCoreAdministration(getSolrClient(config));
+        try {
+            if (admin.getCores().contains(config.getName())) {
+                SolrSchema schema = admin.getSchema(config.getName());
+                return processSchema(schema, newProgram, config.getProgram());
+
+            }
+            return false;
+        } catch (SolrServerException e) {
+            throw new MarmottaException(e);
+        }
+
     }
-
-    /**
-     * Unregister the core with the name given as argument with the SOLR core admin.
-     *
-     * @param coreName
+    /** 
+     * Process SOLR schema change
+     * @param schema The <i>original, newly created</i> schema.
+     * @param program The search program with the list of fields to be added
+     * @return <code>true</code> on success, <code>false</code> otherwise
+     * @throws MarmottaException
      */
-    private void unregisterSolrCore(String coreName) {
-        log.info("unregistering core {} from embedded SOLR service", coreName);
-        searchFilter.getCores().unload(coreName, true, true, true);
-        // SolrCore core = searchFilter.getCores().unload(coreName, true, true, true);
-        // if(core != null)
-        // core.close();
+    private boolean processSchema(SolrSchema schema, Program<Value> program) throws MarmottaException {
+        return processSchema(schema, program, null);
     }
 
+    /** 
+     * Process SOLR schema update
+     * @param schema The <i>stored, modified</i> schema containing declarations for the <b>oldProgram</b>.
+     * @param program The search program with the list of fields to be stored in the schema
+     * @param oldProgram The search program currently contained in the schema
+     * @return <code>true</code> on success, <code>false</code> otherwise
+     * @throws MarmottaException
+     */
+    private boolean processSchema(SolrSchema schema, Program<Value> program, Program<Value> oldProgram)
+            throws MarmottaException {
+        try {
+            List<SolrField> created = checkProgram(schema, program);
+            if (oldProgram != null) {
+                List<SolrField> old = checkProgram(schema, oldProgram);
+                return schema.updateSchema(old, created);
+            } else {
+                return schema.updateSchema(created);
+            }
+        } catch (SolrServerException e) {
+            throw new MarmottaException(e);
+        }
+    }
+    /**
+     * Verify the provided schema and create the list of {@link SolrField} 
+     * based on the  
+     * @param schema
+     * @param program
+     * @return
+     * @throws MarmottaException
+     */
+    private List<SolrField> checkProgram(SolrSchema schema, Program<Value> program) throws MarmottaException {
+        List<SolrField> createdElements = new ArrayList<>();
+        for (FieldMapping<?, Value> map : program.getFields()) {
+            SolrField field = new SolrField();
+            field.setName(map.getFieldName());
+            // obtain the type from the program service
+            field.setType(solrProgramService.getSolrFieldType(map.getFieldType().toString()));
+            field.setProperty("stored", Boolean.TRUE);
+            field.setProperty("multiValued", Boolean.TRUE);
+            field.setProperty("indexed", Boolean.TRUE);
+            if (map.getFieldConfig() != null) {
+                for (String key : map.getFieldConfig().keySet()) {
+                    field.setProperty(key, map.getFieldConfig().get(key));
+                }
+            }
+            // the field type may be dynamic - handle the type differently
+            if (field.getType().equals("dynamic")) {
+                SolrField f = processDynamicField(schema, field, map.getFieldConfig(), false);
+                if (f != null)
+                    createdElements.add(f);
+            } else {
+                SolrField f = processField(schema, field, false);
+                if (f != null)
+                    createdElements.add(f);
+                
+                System.out.println(
+                        String.format("Need to create %s with type %s", map.getFieldName(), map.getFieldType()));
+            }
+        }
+        return createdElements;
+    }
+
+    private String detectSolrType(Map<String, String> fieldConfig) {
+        String solrType = "string";
+        if (fieldConfig != null && fieldConfig.get("solrType") != null) {
+            return fieldConfig.get("solrType");
+        }
+        return solrType;
+    }
+
+    private SolrField processField(SolrSchema schema, SolrField field, boolean create) throws MarmottaException {
+        if (!schema.hasType(field.getType())) {
+            throw new MarmottaException(
+                    String.format("Cannot add field %s, the requested field type [%s] is not present", field.getName(),
+                            field.getType()));
+        }
+        // we need to create a field
+        try {
+            if (create && !schema.hasField(field.getName())) {
+                // do we really need to create it
+                schema.addField(field);
+            }
+            return field;
+        } catch (SolrServerException e) {
+            throw new MarmottaException(e);
+        }
+    }
+
+    private SolrField processDynamicField(SolrSchema schema, SolrField solrField, Map<String, String> fieldConfig,
+            boolean create) throws MarmottaException {
+        // detect the type based on provided fieldConfig
+        solrField.setType(detectSolrType(fieldConfig));
+        // need to detect a name for the field
+        SolrField dynamic = schema.getDynamicFieldForType(solrField.getType());
+
+        if (dynamic == null) {
+            // no dynamicField present - need to create one
+            if (schema.hasType(solrField.getType())) {
+
+                if (!solrField.getName().contains("*")) {
+                    if (fieldConfig != null && fieldConfig.get("dynamicField") != null) {
+                        solrField.setName(fieldConfig.get("dynamicField"));
+                        try {
+                            if (create) {
+                                schema.addDynamicField(solrField);
+                            }
+                            // add to list of changes
+                            return solrField;
+                        } catch (SolrServerException e) {
+                            throw new MarmottaException(e);
+                        }
+                    }
+                } else {
+                    throw new MarmottaException(
+                            "Cannot detect dynamic field name for the provided program field: " + solrField.getName());
+                }
+
+            }
+        } else {
+            if (fieldConfig != null && fieldConfig.get("dynamicField") != null) {
+                if (dynamic.getName().equals(fieldConfig.get("dynamicField"))) {
+                    return dynamic;
+                }
+            }
+        }
+        return null;
+    }
+    /**
+     * Reload the core
+     * @param config
+     */
+    private void reloadSolrCore(SolrCoreConfiguration config) {
+        try {
+            SolrCoreAdministration adminHelper = new SolrCoreAdministration(getSolrClient(config));
+            log.info("reloading core {} ", config.getName());
+            adminHelper.reload(config.getName());
+        } catch (SolrServerException e) {
+            log.error("error when reloading core {} - reason: {}", config.getName(), e.getLocalizedMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+    private boolean unregisterSolrCore(SolrCoreConfiguration config) {
+        try {
+            SolrCoreAdministration adminHelper = new SolrCoreAdministration(getSolrClient(config));
+            log.info("unregistering/removing core {} ", config.getName());
+            return adminHelper.remove(config.getName());
+        } catch (SolrServerException e) {
+            log.error("error when unregistering/removing core {} - reason: {}", config.getName(), e.getLocalizedMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

@@ -270,5 +270,27 @@ public class SolrProgramServiceImpl implements SolrProgramService {
         else
             return result;
     }
-
+    /**
+     * Return the corresponding string for the provided program
+     * @param program
+     * @return
+     * @throws LDPathParseException
+     */
+    @Override
+    public String getProgramString(Program<Value> program) throws LDPathParseException {
+        try {
+            RepositoryConnection connection = sesameService.getConnection();
+            try {
+                connection.begin();
+                SesameConnectionBackend backend = SesameConnectionBackend.withConnection(connection);
+                return program.getPathExpression(backend);
+            } finally {
+                connection.commit();
+                connection.close();
+            }
+        } catch (RepositoryException e) {
+            throw new LDPathParseException("could not parse because of an error in the backend", e);
+        }
+        
+    }
 }

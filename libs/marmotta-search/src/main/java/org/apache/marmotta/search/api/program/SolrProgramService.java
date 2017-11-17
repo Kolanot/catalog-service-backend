@@ -51,5 +51,8 @@ public interface SolrProgramService {
 	public String getSolrFieldType(String xsdType) throws MarmottaException;
 
 
+    public String getProgramString(Program<Value> program) throws LDPathParseException;
+
+
 
 }

@@ -117,7 +117,7 @@ public class SolrIndexingServiceImpl extends WorkerServiceImpl<SolrCoreRuntime,S
      */
     @Override
     public SolrCoreRuntime createWorker(SolrCoreConfiguration config) {
-        return new SolrCoreRuntime(config, this);
+        return new SolrCoreRuntime(config, this, solrCoreService.getSolrClient(config));
     }
 
     /**

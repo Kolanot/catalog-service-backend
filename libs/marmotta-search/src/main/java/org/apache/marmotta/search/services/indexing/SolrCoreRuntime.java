@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.marmotta.kiwi.model.rdf.KiWiResource;
+import org.apache.marmotta.platform.core.exception.MarmottaException;
 import org.apache.marmotta.platform.core.util.CDIContext;
 import org.apache.marmotta.search.api.indexing.SolrIndexingService;
 import org.apache.marmotta.search.filters.LMFSearchFilter;
@@ -66,7 +67,7 @@ public final class SolrCoreRuntime extends WorkerRuntime<SolrCoreConfiguration> 
 
     private SolrIndexingService parent;
 
-    public SolrCoreRuntime(SolrCoreConfiguration configuration, SolrIndexingService parent) {
+    public SolrCoreRuntime(SolrCoreConfiguration configuration, SolrIndexingService parent, SolrClient client) {
         super(configuration);
 
         this.parent = parent;
@@ -79,22 +80,7 @@ public final class SolrCoreRuntime extends WorkerRuntime<SolrCoreConfiguration> 
         } else {
             serverLock.lock();
             try {
-                //server = configuration.getSolrClient();
-            		// use the host from config
-                switch (configuration.getSolrClientType()) {
-                case EMBEDDED:
-                    server = new EmbeddedSolrServer(filter.getCores(), config.getName());
-                    log.debug("({}) created embedded SolrServer", config.getName());
-                    break;
-                case REMOTE:
-                    server = new HttpSolrClient.Builder().withBaseSolrUrl(configuration.getSolrClientURI()).build();
-                    log.debug("({}) created Remote SolrServer", config.getName());
-                    break;
-                case CLOUD:
-                    server = new CloudSolrClient.Builder().withSolrUrl(configuration.getSolrClientURI()).build();
-                    log.debug("({}) created Cloud SolrServer", config.getName());
-                    break;
-                }
+                server = client;
             } finally {
                 serverLock.unlock();
             }

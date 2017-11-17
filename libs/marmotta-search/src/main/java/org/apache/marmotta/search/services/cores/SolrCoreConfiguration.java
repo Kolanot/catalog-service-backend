@@ -65,12 +65,22 @@ public class SolrCoreConfiguration extends WorkerConfiguration {
     private SolrClientType solrClientType = SolrClientType.EMBEDDED;
     /**
      * 
-     * @author dglachs
-     *
+     * List of possible Solr Clients
+     * REMOTE and CLOUD are only valid with
+     * a URI  
      */
     public enum SolrClientType {
         EMBEDDED, REMOTE, CLOUD
     }
+    /**
+     * The type of the Solr connection 
+     * <ul>
+     * <li>EMBEDDED --> {@link EmbeddedSolrServer}
+     * <li>REMOTE --> {@link HttpSolrClient}
+     * <li>CLOUD --> {@link CloudSolrClient}
+     * </ul>
+     * @return 
+     */
     public SolrClientType getSolrClientType() {
         return solrClientType;
     }
@@ -216,28 +226,5 @@ public class SolrCoreConfiguration extends WorkerConfiguration {
 
 	public void setSolrClientURI(String solrCloudURI) {
 		this.solrCloudURI = solrCloudURI;
-	}
-	public SolrClient getSolrClient() throws MarmottaException  {
-	    SolrClient server;
-	    switch (getSolrClientType()) {
-        case REMOTE:
-            server = new HttpSolrClient.Builder().withBaseSolrUrl(getSolrClientURI()).build();
-//            log.debug("({}) created Remote SolrServer", getName());
-            break;
-        case CLOUD:
-            server = new CloudSolrClient.Builder().withSolrUrl(getSolrClientURI()).build();
-//            log.debug("({}) created Cloud SolrServer", getName());
-            break;
-        default:
-            LMFSearchFilter filter = CDIContext.getInstance(LMFSearchFilter.class);
-            if (filter.getCores() == null) {
-                throw new MarmottaException("SOLR not configured!");
-            } else {
-
-                server = new EmbeddedSolrServer(filter.getCores(), getName());
-            }
-            break;
-        }
-	    return server;
 	}
 }
