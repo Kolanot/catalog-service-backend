@@ -307,12 +307,12 @@ public class SolrCoreServiceImpl implements SolrCoreService {
             configurationService.setType(prefix + ".program", "org.marmotta.type.Program");
 
             // optional
-            configurationService.setConfiguration(prefix + "server_type", engine.getSolrClientType().name());
-            configurationService.setType(prefix + "server_type", "java.lang.Enum(\"EMBEDDED\"|\"REMOTE\"|\"CLOUD\")");
+            configurationService.setConfiguration(prefix + ".server_type", engine.getSolrClientType().name());
+            configurationService.setType(prefix + ".server_type", "java.lang.Enum(\"EMBEDDED\"|\"REMOTE\"|\"CLOUD\")");
             if (engine.getSolrClientURI() != null) {
-                configurationService.setConfiguration(prefix + "server_uri", engine.getSolrClientURI());
+                configurationService.setConfiguration(prefix + ".server_uri", engine.getSolrClientURI());
             } else {
-                configurationService.removeConfiguration(prefix + "server_uri");
+                configurationService.removeConfiguration(prefix + ".server_uri");
             }
             storing = false;
         }
@@ -451,6 +451,9 @@ public class SolrCoreServiceImpl implements SolrCoreService {
                     engine.setProgramString(program);
                     // store the config in marmotta's config
                     storeSolrCoreConfiguration(engine);
+                    
+                    coreUpdatedEvent.fire(engine);
+
                 }
             }
 
@@ -954,9 +957,11 @@ public class SolrCoreServiceImpl implements SolrCoreService {
                 // adopt the schema
                 SolrSchema schema = admin.getSchema(config.getName());
                 processSchema(schema, config.getProgram());
+                // be sure to have all info's stored
+                storeSolrCoreConfiguration(config);
             } else {
                 // reload the core so that the schema mapping is based on actual data
-                admin.reload(config.getName());
+                admin.reloadCore(config.getName());
             }
 
         } catch (IOException e) {
@@ -974,6 +979,9 @@ public class SolrCoreServiceImpl implements SolrCoreService {
                 SolrSchema schema = admin.getSchema(config.getName());
                 return processSchema(schema, newProgram, config.getProgram());
 
+            }
+            else {
+                // TODO: check the option of creating on update
             }
             return false;
         } catch (SolrServerException e) {
@@ -1127,7 +1135,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
         try {
             SolrCoreAdministration adminHelper = new SolrCoreAdministration(getSolrClient(config));
             log.info("reloading core {} ", config.getName());
-            adminHelper.reload(config.getName());
+            adminHelper.reloadCore(config.getName());
         } catch (SolrServerException e) {
             log.error("error when reloading core {} - reason: {}", config.getName(), e.getLocalizedMessage());
             e.printStackTrace();
@@ -1139,7 +1147,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
         try {
             SolrCoreAdministration adminHelper = new SolrCoreAdministration(getSolrClient(config));
             log.info("unregistering/removing core {} ", config.getName());
-            return adminHelper.remove(config.getName());
+            return adminHelper.removeCore(config.getName());
         } catch (SolrServerException e) {
             log.error("error when unregistering/removing core {} - reason: {}", config.getName(), e.getLocalizedMessage());
             e.printStackTrace();
