@@ -36,5 +36,7 @@ public class SolrCopyField extends SolrSchemaElement {
     public String getDestination() {
         return getString("dest");
     }
-
+    public String getName() {
+        return getSource();
+    }
 }

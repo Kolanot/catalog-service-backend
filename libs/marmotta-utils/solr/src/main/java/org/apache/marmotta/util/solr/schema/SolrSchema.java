@@ -1,5 +1,6 @@
 package org.apache.marmotta.util.solr.schema;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,6 +42,15 @@ public class SolrSchema {
         }
         return null;
     }
+    public SolrField getDynamicFieldForType(String type) {
+        for (SolrField f : dynamicFields) {
+            if (type.equals(f.getType())) {
+                return f;
+            }
+        }
+        return null;
+        
+    }
     public SolrCopyField getCopyField(String name) {
         for (SolrCopyField f : copyFields) {
             if (name.equals(f.getSource())) {
@@ -69,6 +79,10 @@ public class SolrSchema {
         SolrField f = getDynamicField(name);
         return f != null;
     }
+    public boolean hasDynamicFieldForType(String type) {
+        SolrField f = getDynamicFieldForType(type);
+        return f != null;
+    }
     public boolean hasCopyField(String name) {
         SolrCopyField f  = getCopyField(name);
         return f !=null;
@@ -79,69 +93,55 @@ public class SolrSchema {
         }
         return admin.addField(coreName, field);
     }
+    /**
+     * 
+     * @param oldFields
+     * @param newFields
+     * @return
+     * @throws SolrServerException 
+     */
+    public boolean updateSchema(List<SolrField> oldFields, List<SolrField> newFields) throws SolrServerException {
+        SolrSchemaChange change = new SolrSchemaChange(this, oldFields);
+        change.updateSchema(newFields);
+        return false;
+        
+    }
+    public boolean updateSchema(List<SolrField> newFields) throws SolrServerException {
+        SolrSchemaChange change = new SolrSchemaChange(this);
+        change.updateSchema(newFields);
+        return false;
+    }
+    boolean addFields(List<SolrField> toAdd) throws SolrServerException {
+        if ( admin == null ) {
+            throw new IllegalStateException("No Admin Client");
+        }
+        return admin.addFields(coreName, toAdd);
+    }
+    boolean updateFields(List<SolrField> toUpdate) throws SolrServerException {
+        if ( admin == null ) {
+            throw new IllegalStateException("No Admin Client");
+        }
+        return admin.updateFields(coreName, toUpdate);
+    }
+    boolean deleteFields(List<SolrField> toDelete) throws SolrServerException {
+        if ( admin == null ) {
+            throw new IllegalStateException("No Admin Client");
+        }
+        return admin.deleteFields(coreName, toDelete);
+    }
+
     public boolean addCopyField(String source, String dest) throws SolrServerException {
         if ( admin == null ) {
             throw new IllegalStateException("No Admin Client");
         }
         return admin.addCopyField(coreName, source, Collections.singletonList(dest));
     }
-    public boolean addDynamicField(String coreName, SolrField defnition) throws SolrServerException {
+    public boolean addDynamicField(SolrField defnition) throws SolrServerException {
         if ( admin == null ) {
             throw new IllegalStateException("No Admin Client");
         }
         return admin.addDynamicField(coreName, defnition);
     }
-//
-//    public void loadSchema(File file) throws MarmottaException {
-//
-//        SAXBuilder parser = new SAXBuilder(XMLReaders.NONVALIDATING);
-//        try {
-//            Document doc = parser.build(file);
-//
-//            Element schemaNode = doc.getRootElement();
-//            version = schemaNode.getAttribute("version").getDoubleValue();
-//            if (schemaNode.getAttribute("version").getDoubleValue() < 1.6) {
-//                //
-//                Element fieldsNode = schemaNode.getChild("fields");
-//                if (!schemaNode.getName().equals("schema") || fieldsNode == null)
-//                    throw new MarmottaException(file.getName() + " is an invalid SOLR schema file");
-//
-//            }
-//            // check for fields
-//            List<Element> fieldElements = getChildren(schemaNode, "field");
-//            for (Element fieldElement : fieldElements) {
-//                Field schemaField = fromAttributes(fieldElement);
-//                fields.add(schemaField);
-//            }
-//            // check for fieldTypes
-//            List<Element> fieldTypeElements = getChildren(schemaNode, "fieldType");
-//            for (Element fieldTypeElement : fieldTypeElements) {
-//                Field fieldType = fromAttributes(fieldTypeElement);
-//                FieldTypeRepresentation rep = new FieldTypeRepresentation();
-//                rep.setAttributes(fieldType);
-//                types.add(rep);
-//            }
-//            //
-//            List<Element> dynamicFieldElements = getChildren(schemaNode, "dynamicField");
-//            for (Element dynamicFieldElement : dynamicFieldElements) {
-//                Field fieldType = fromAttributes(dynamicFieldElement);
-//                dynamicFields.add(fieldType);
-//            }
-//            List<Element> copyFieldElements = getChildren(schemaNode, "copyField");
-//            for (Element copyFieldElement : copyFieldElements) {
-//                Field fieldType = fromAttributes(copyFieldElement);
-//                copyFields.add(fieldType);
-//            }
-//        } catch (JDOMException e) {
-//            throw new MarmottaException("parse error while parsing SOLR schema template file " + file.getAbsolutePath(),
-//                    e);
-//        } catch (IOException e) {
-//            throw new MarmottaException("I/O error while parsing SOLR schema template file " + file.getAbsolutePath(),
-//                    e);
-//        }
-//
-//    }
-
 
     public List<FieldTypeRepresentation> getTypes() {
         return types;

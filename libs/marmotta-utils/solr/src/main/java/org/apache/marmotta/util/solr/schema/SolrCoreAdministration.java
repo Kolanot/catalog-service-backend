@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
@@ -17,6 +18,7 @@ import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.request.GenericSolrRequest;
 import org.apache.solr.client.solrj.request.schema.FieldTypeDefinition;
 import org.apache.solr.client.solrj.request.schema.SchemaRequest;
+import org.apache.solr.client.solrj.request.schema.SchemaRequest.ReplaceField;
 import org.apache.solr.client.solrj.response.ConfigSetAdminResponse;
 import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.client.solrj.response.SimpleSolrResponse;
@@ -29,6 +31,7 @@ import org.apache.solr.client.solrj.response.schema.SchemaResponse.FieldsRespons
 import org.apache.solr.common.params.CoreAdminParams.CoreAdminAction;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
+import org.apache.solr.schema.CopyField;
 
 public class SolrCoreAdministration {
     final SolrClient client;
@@ -122,6 +125,76 @@ public class SolrCoreAdministration {
             throw new SolrServerException(e);
         }
     }
+    public boolean addFields(String core, List<SolrField> elements) throws SolrServerException {
+        final List<SchemaRequest.Update> requests = new ArrayList<>();
+        elements.forEach(new Consumer<SolrField>() {
+
+            @Override
+            public void accept(SolrField t) {
+                if ( t.getName().contains("*")) {
+                    requests.add(new SchemaRequest.AddDynamicField(t));
+                }
+                else {
+                    requests.add(new SchemaRequest.AddField(t));
+                }
+                
+            }
+        });
+        try {
+            SchemaResponse.UpdateResponse resp = new SchemaRequest.MultiUpdate(requests).process(client, core);
+            return resp.getStatus() == 0;
+            
+        } catch (IOException e) {
+            throw new SolrServerException(e);
+        }
+    }
+
+    public boolean deleteFields(String core, List<SolrField> elements) throws SolrServerException {
+        final List<SchemaRequest.Update> requests = new ArrayList<>();
+        elements.forEach(new Consumer<SolrField>() {
+
+            @Override
+            public void accept(SolrField t) {
+                if ( t.getName().contains("*")) {
+                    requests.add(new SchemaRequest.DeleteDynamicField(t.getName()));
+                }
+                else {
+                    requests.add(new SchemaRequest.DeleteField(t.getName()));
+                }
+                
+            }
+        });
+        try {
+            SchemaResponse.UpdateResponse resp = new SchemaRequest.MultiUpdate(requests).process(client, core);
+            return resp.getStatus() == 0;
+            
+        } catch (IOException e) {
+            throw new SolrServerException(e);
+        }
+    }
+    public boolean updateFields(String core, List<SolrField> elements) throws SolrServerException {
+        final List<SchemaRequest.Update> requests = new ArrayList<>();
+        elements.forEach(new Consumer<SolrField>() {
+
+            @Override
+            public void accept(SolrField t) {
+                if ( t.getName().contains("*")) {
+                    requests.add(new SchemaRequest.ReplaceDynamicField(t));
+                }
+                else {
+                    requests.add(new SchemaRequest.ReplaceField(t));
+                }
+                
+            }
+        });
+        try {
+            SchemaResponse.UpdateResponse resp = new SchemaRequest.MultiUpdate(requests).process(client, core);
+            return resp.getStatus() == 0;
+            
+        } catch (IOException e) {
+            throw new SolrServerException(e);
+        }
+    }
     public boolean addDynamicField(String core, Map<String, Object> fieldDefinition) throws SolrServerException {
         try {
             // try to create the schema field
@@ -136,10 +209,27 @@ public class SolrCoreAdministration {
     public boolean removeField(String core, SolrField fieldDefinition) throws SolrServerException {
         try {
             // try to create the schema field
-            SchemaResponse.UpdateResponse resp = new SchemaRequest.DeleteField(fieldDefinition.getName()).process(client, core);
+            SchemaResponse.UpdateResponse resp = null;
+            if (fieldDefinition.getName().contains("*")) {
+                // Dynamic Field
+                resp = new SchemaRequest.DeleteDynamicField(fieldDefinition.getName()).process(client, core);
+            }
+            else {
+                // regular field
+                resp = new SchemaRequest.DeleteDynamicField(fieldDefinition.getName()).process(client, core);
+                
+            }
             return resp.getStatus() == 0;
         } catch (IOException e) {
             e.printStackTrace();
+            throw new SolrServerException(e);
+        }
+    }
+    public boolean removeCopyFiled(String core, String source, List<String> destination) throws SolrServerException {
+        try {
+            SchemaResponse.UpdateResponse resp = new SchemaRequest.DeleteCopyField(source, destination).process(client, core);
+            return resp.getStatus() == 0;
+        } catch (IOException e) {
             throw new SolrServerException(e);
         }
     }
@@ -184,26 +274,28 @@ public class SolrCoreAdministration {
                 return coreList;
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
+            return new ArrayList<String>();
         }
-        return new ArrayList<String>();
         
         
     }
     public boolean create(String core, String path) throws SolrServerException {
         try {
             CoreAdminResponse response = CoreAdminRequest.createCore(core, path, client);
-//            CoreAdminRequest request = new CoreAdminRequest();
-//            request.setAction(CoreAdminAction.CREATE);
-//            request.setCoreName(core);
-//            request.setPath(path);
-//            CoreAdminResponse response = request.process(client);
             return response.getStatus() == 0;
         } catch (IOException e) {
             throw new SolrServerException(e);
         }
         
+    }
+    public boolean remove(String core) throws SolrServerException {
+        try {
+            CoreAdminResponse response = CoreAdminRequest.unloadCore(core, true,true,client);
+            return response.getStatus() == 0;
+        } catch (IOException e) {
+            throw new SolrServerException(e);
+        }
     }
     public boolean reload(String core) throws SolrServerException {
         try {

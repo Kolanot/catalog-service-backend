@@ -51,5 +51,8 @@ public class SolrField extends SolrSchemaElement {
     public String getType() {
         return getString("type");
     }
+    public boolean isDynamic() {
+        return getName()!=null && getName().contains("*");
+    }
 
 }

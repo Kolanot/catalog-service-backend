@@ -56,4 +56,5 @@ public abstract class SolrSchemaElement extends HashMap<String,Object> {
         return null;
     }
 
+    public abstract String getName();
 }
