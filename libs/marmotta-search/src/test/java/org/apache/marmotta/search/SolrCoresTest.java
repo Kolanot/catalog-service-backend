@@ -208,6 +208,35 @@ public class SolrCoresTest {
             configurationService.setBooleanConfiguration("solr.core."+CORE_NAME+".update_dependencies", true);
             Thread.sleep(1000);
             assertTrue(engine.isUpdateDependencies());
+            solrCoreService.removeSolrCore(engine);
+
+        } catch (LDPathParseException e) {
+            fail("Invalid LDPath program");
+        }
+    }
+    @Test
+    public void testDynamicConfiguration() throws Exception {
+
+        String programString = IOUtils.toString(this.getClass().getResourceAsStream("books.ldpath"), "UTF-8");
+        String changedString = IOUtils.toString(this.getClass().getResourceAsStream("dynamic.ldpath"), "UTF-8");
+        
+
+        try {
+            // This should never fail
+            final Program<Value> p = solrProgramService.parseProgram(new StringReader(programString));
+            assertNotNull(p);
+
+            // Here come the fun
+            SolrCoreConfiguration engine = solrCoreService.createSolrCore(CORE_NAME, programString);
+            final Program<Value> c = solrProgramService.parseProgram(new StringReader(changedString));
+            assertNotNull(c);
+            
+            solrCoreService.updateSolrCore(engine, changedString);
+
+            configurationService.setBooleanConfiguration("solr.core."+CORE_NAME+".update_dependencies", true);
+            Thread.sleep(1000);
+            assertTrue(engine.isUpdateDependencies());
+            solrCoreService.removeSolrCore(engine);
 
         } catch (LDPathParseException e) {
             fail("Invalid LDPath program");
