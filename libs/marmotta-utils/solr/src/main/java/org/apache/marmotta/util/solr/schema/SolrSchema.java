@@ -102,14 +102,13 @@ public class SolrSchema {
      */
     public boolean updateSchema(List<SolrField> oldFields, List<SolrField> newFields) throws SolrServerException {
         SolrSchemaChange change = new SolrSchemaChange(this, oldFields);
-        change.updateSchema(newFields);
-        return false;
+        return change.updateSchema(newFields);
+
         
     }
     public boolean updateSchema(List<SolrField> newFields) throws SolrServerException {
         SolrSchemaChange change = new SolrSchemaChange(this);
-        change.updateSchema(newFields);
-        return false;
+        return change.updateSchema(newFields);
     }
     boolean addFields(List<SolrField> toAdd) throws SolrServerException {
         if ( admin == null ) {

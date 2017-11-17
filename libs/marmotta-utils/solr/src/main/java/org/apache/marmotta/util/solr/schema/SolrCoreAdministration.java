@@ -18,7 +18,7 @@ import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.request.GenericSolrRequest;
 import org.apache.solr.client.solrj.request.schema.FieldTypeDefinition;
 import org.apache.solr.client.solrj.request.schema.SchemaRequest;
-import org.apache.solr.client.solrj.request.schema.SchemaRequest.ReplaceField;
+import org.apache.solr.client.solrj.response.CollectionAdminResponse;
 import org.apache.solr.client.solrj.response.ConfigSetAdminResponse;
 import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.client.solrj.response.SimpleSolrResponse;
@@ -31,7 +31,6 @@ import org.apache.solr.client.solrj.response.schema.SchemaResponse.FieldsRespons
 import org.apache.solr.common.params.CoreAdminParams.CoreAdminAction;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
-import org.apache.solr.schema.CopyField;
 
 public class SolrCoreAdministration {
     final SolrClient client;
@@ -280,25 +279,47 @@ public class SolrCoreAdministration {
         
         
     }
+    
     public boolean create(String core, String path) throws SolrServerException {
         try {
-            CoreAdminResponse response = CoreAdminRequest.createCore(core, path, client);
-            return response.getStatus() == 0;
+            if ( isCloudMode() ) {
+
+                CollectionAdminResponse resp = CollectionAdminRequest.createCollection(core, 2, 1).process(client);
+                SolrSchema schema = getSchema(core);
+                if (!schema.hasType("uri")) {
+                    CollectionAdminRequest.deleteCollection(core).process(client);
+                    throw new SolrServerException("The Solr instance is not properly configured, ensure the fieldType 'uri'");
+                }
+                return resp.isSuccess();
+                
+            }
+            else {
+                CoreAdminResponse response = CoreAdminRequest.createCore(core, path, client);
+                return response.getStatus() == 0;
+            }
         } catch (IOException e) {
             throw new SolrServerException(e);
         }
         
     }
-    public boolean remove(String core) throws SolrServerException {
+    public boolean removeCore(String core) throws SolrServerException {
         try {
+            if ( isCloudMode()) {
+                CollectionAdminResponse deleted = CollectionAdminRequest.deleteCollection(core).process(client);
+                return deleted.isSuccess();
+            }
             CoreAdminResponse response = CoreAdminRequest.unloadCore(core, true,true,client);
             return response.getStatus() == 0;
         } catch (IOException e) {
             throw new SolrServerException(e);
         }
     }
-    public boolean reload(String core) throws SolrServerException {
+    public boolean reloadCore(String core) throws SolrServerException {
         try {
+            if ( isCloudMode() ) {
+                CollectionAdminResponse resp = CollectionAdminRequest.reloadCollection(core).process(client);
+                return resp.isSuccess();
+            }
             CoreAdminRequest request = new CoreAdminRequest();
             request.setAction(CoreAdminAction.RELOAD);
             request.setCoreName(core);
@@ -376,28 +397,4 @@ public class SolrCoreAdministration {
         }
    
     }
-
-    public static void main(String [] args) throws Exception {
-        SolrCoreAdministration a = new SolrCoreAdministration(null);
-        List<String> cores = a.getCores();
-        for (String c : cores) {
-            System.out.println(c);
-            List<FieldTypeRepresentation> r = a.getFieldTypes(c);
-            for (FieldTypeRepresentation rep : r) {
-                System.out.println(rep.getAttributes().toString());
-                if ( rep.getFields() != null ) {
-                    System.out.println(rep.getFields());
-                }
-            }
-            List<SolrField> fieldMap = a.getFields(c);
-            for ( SolrField field : fieldMap) {
-                for (String key : field.keySet()) {
-                    System.out.print(key + ": " + field.get(key) + "; ");
-                }
-                System.out.println();
-            }
-        }
-        a.listConfigSets();
-    }
-
 }
