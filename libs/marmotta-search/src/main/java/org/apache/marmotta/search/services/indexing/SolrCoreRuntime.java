@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.marmotta.kiwi.model.rdf.KiWiResource;
-import org.apache.marmotta.platform.core.exception.MarmottaException;
 import org.apache.marmotta.platform.core.util.CDIContext;
 import org.apache.marmotta.search.api.indexing.SolrIndexingService;
 import org.apache.marmotta.search.filters.LMFSearchFilter;
@@ -31,10 +30,8 @@ import org.apache.marmotta.search.services.cores.SolrCoreConfiguration;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
-import org.apache.solr.client.solrj.impl.CloudSolrClient;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION;
+import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -108,7 +105,10 @@ public final class SolrCoreRuntime extends WorkerRuntime<SolrCoreConfiguration> 
         query.setFields("lmf.uri");
         query.setRows(Integer.MAX_VALUE);
         try {
-            SolrDocumentList docs = server.query(query).getResults();
+            QueryRequest queryRequest = new QueryRequest(query);
+            queryRequest.process(server, getConfiguration().getName());
+            // 
+            SolrDocumentList docs = queryRequest.process(server, getConfiguration().getName()).getResults();
 
             Set<URI> result = new HashSet<URI>();
             for (SolrDocument doc : docs) {
@@ -136,7 +136,7 @@ public final class SolrCoreRuntime extends WorkerRuntime<SolrCoreConfiguration> 
                     update.setCommitWithin(10000);
                     update.add(doc);
                     //update.setAction(ACTION.COMMIT, false, false);
-                    server.request(update);
+                    server.request(update, getConfiguration().getName());
                 } else {
                     log.warn("({}) rejected document without 'id' for update", config.getName());
                 }
@@ -203,7 +203,7 @@ public final class SolrCoreRuntime extends WorkerRuntime<SolrCoreConfiguration> 
             request.deleteByQuery("id:[* TO *]");
             request.setAction(ACTION.COMMIT, true, true);
 
-            server.request(request);
+            server.request(request, getConfiguration().getName());
         } catch (IOException e) {
             log.error("(" + config.getName() + ") could not clear search index: an I/O Exception occurred", e);
         } catch (SolrServerException e) {
