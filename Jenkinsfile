@@ -14,7 +14,7 @@ node('nimble-jenkins-slave') {
     }
 
     stage('Build Docker') {
-        sh 'mvn -f identity-service/pom.xml docker:build'
+        sh 'docker build -t nimbleplatform/marmotta .'
     }
 
     if (env.BRANCH_NAME == 'master') {
