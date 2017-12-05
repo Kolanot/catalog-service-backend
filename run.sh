@@ -7,6 +7,18 @@ if [ "$1" == "run" ]; then
     # run docker compose
     docker-compose up --build
 
+elif [ "$1" == "docker-build" ]; then
+
+    # build maven project
+#    mvn clean install -DskipTests
+
+    # build docker image
+    docker build -t nimbleplatform/marmotta .
+
+elif [ "$1" == "docker-push" ]; then
+
+    docker push nimbleplatform/marmotta
+
 elif [ "$1" == "bx-build-kube" ]; then
 
     # build maven project

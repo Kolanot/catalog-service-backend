@@ -4,9 +4,6 @@ services:
   marmotta:
     build:
       context: .
-      args:
-        TOMCAT_USER: admin
-        TOMCAT_PASSWORD: changeme
     environment:
       - "database.user=root"
       - "database.password=changeme"
