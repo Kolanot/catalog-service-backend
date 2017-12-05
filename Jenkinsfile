@@ -7,6 +7,14 @@ node('nimble-jenkins-slave') {
         git(url: 'https://github.com/nimble-platform/catalog-service-backend.git', branch: env.BRANCH_NAME)
     }
 
+    stage('Build Dependencies') {
+        sh 'rm -rf common   '
+        sh 'git clone https://github.com/nimble-platform/common'
+        dir ('common') {
+            sh 'mvn clean install'
+        }
+    }
+
     stage('Build Java') {
         sh 'mvn clean install -DskipTests'
     }
