@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.marmotta.kiwi.model.rdf.KiWiLiteral;
@@ -30,16 +29,11 @@ import org.openrdf.model.Value;
 
 import com.google.common.base.CaseFormat;
 
-<<<<<<< HEAD:libs/marmotta-search/src/main/java/org/apache/marmotta/search/ldpath/model/functions/DynamicFunction.java
-public class DynamicFunction  extends SelectorFunction<Value> {
-=======
-import at.newmedialab.lmf.search.ldpath.model.backend.WildcardAwareBackend;
-
 public class DynamicFunction extends SelectorFunction<Value> {
->>>>>>> master:libs/marmotta-search/src/main/java/at/newmedialab/lmf/search/ldpath/model/functions/DynamicFunction.java
 
 	@Override
-	public Collection<Value> apply(RDFBackend<Value> backend, Value context, Collection<Value>... args)
+	public Collection<Value> apply(RDFBackend<Value> backend, Value context, 
+	        @SuppressWarnings("unchecked") Collection<Value>... args)
 			throws IllegalArgumentException {
 		// if (args.length < 1 && args.length > 4) {
 		// throw new IllegalArgumentException("wrong usage: " + getSignature());

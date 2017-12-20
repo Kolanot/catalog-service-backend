@@ -2,6 +2,7 @@ package org.apache.marmotta.search.ldpath.model.backend;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.marmotta.ldpath.backend.sesame.ContextAwareSesameConnectionBackend;
@@ -99,4 +100,17 @@ public class WildcardAwareBackend extends ContextAwareSesameConnectionBackend {
         return vl;
 
     }
+    public Collection<Value> createDynLiteralCollection(Map<String,Collection<String>> valueMap) {
+        HashSet<Value> vl = new HashSet<>();
+        for (String name : valueMap.keySet()) {
+            for (String value : valueMap.get(name)) {
+                Value val = createDynLiteral(name, value);
+                vl.add(val);
+                
+            }
+        }
+        return vl;
+
+    }
+    
 }
