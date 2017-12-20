@@ -15,16 +15,21 @@
  */
 package org.apache.marmotta.search.filters;
 
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
-import org.apache.commons.io.IOUtils;
-import org.apache.marmotta.platform.core.api.config.ConfigurationService;
-import org.apache.marmotta.platform.core.api.modules.MarmottaHttpFilter;
-import org.apache.marmotta.platform.core.util.CDIContext;
-import org.apache.marmotta.search.api.cores.SolrCoreService;
-import org.apache.solr.core.CoreContainer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -40,18 +45,18 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.nio.charset.Charset;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.marmotta.platform.core.api.config.ConfigurationService;
+import org.apache.marmotta.platform.core.api.modules.MarmottaHttpFilter;
+import org.apache.marmotta.platform.core.util.CDIContext;
+import org.apache.marmotta.search.api.cores.SolrCoreService;
+import org.apache.solr.core.CoreContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
 
 /**
  * Add a filter that redirects to the SolrDispatchFilter
@@ -60,6 +65,7 @@ import java.util.zip.ZipFile;
  */
 @ApplicationScoped
 public class LMFSearchFilter implements MarmottaHttpFilter {
+    private static final        String SOLR_PREFIX = "/solr";
 
     private Logger               log       = LoggerFactory.getLogger(LMFSearchFilter.class);
 
@@ -67,6 +73,9 @@ public class LMFSearchFilter implements MarmottaHttpFilter {
 
     @Inject
     private ConfigurationService configurationService;
+    
+    //@Inject
+    //private SolrCoreService coreService;
 
     private LMFSolrDispatchFilter   solrDispatchFilter;
 
@@ -119,7 +128,7 @@ public class LMFSearchFilter implements MarmottaHttpFilter {
         solrDispatchFilter = new LMFSolrDispatchFilter();
 
         final Map<String, String> params = new HashMap<String, String>();
-        params.put("path-prefix", "/solr");
+        params.put("path-prefix", SOLR_PREFIX);
 
         FilterConfig solrFilterConfig = new FilterConfig() {
             @Override
@@ -202,7 +211,48 @@ public class LMFSearchFilter implements MarmottaHttpFilter {
                 }
             }
         }
-
+//        if (servletResponse instanceof HttpServletResponse) {
+//            HttpServletRequest req = (HttpServletRequest) request;
+//            HttpServletResponse resp = (HttpServletResponse) servletResponse;
+//            String path = req.getServletPath();
+//            // strip /solr from path 
+//            path = path.substring(SOLR_PREFIX.length());
+//            String parts[] = path.split("/");
+//            // path "/solr/core/remaining" --> parts[0] ="", parts[1]= "solr" 
+//            if ( parts.length >  2) {
+//                String uri = coreService.getSolrCoreUri(parts[1]);
+//                if ( uri != null ) {
+//                    // remote core found
+//                    final StringBuffer buffer = new StringBuffer();
+//                    final List<String> str = new ArrayList<>(); 
+//                    request.getParameterMap().forEach(new BiConsumer<String, String[]>() {
+//
+//                        @Override
+//                        public void accept(String t, String[] u) {
+//                            for (String v : u) {
+//                                try {
+//                                    str.add(t+"="+URLEncoder.encode( v, "UTF-8"));
+//                                } catch (UnsupportedEncodingException e) {
+//                                    // swallow
+//                                    // 
+//                                }
+//                            }
+//                            
+//                        }
+//                    });
+//                    String[] str2 = new String[str.size()];
+//                    str.toArray(str2);
+//                    String str3 = String.join("&", str2);
+//                    if (!resp.containsHeader("Access-Control-Allow-Origin")) {
+//                        resp.addHeader("Access-Control-Allow-Origin", configurationService.getStringConfiguration("kiwi.allow_origin", "*"));
+//                    }
+//                    
+//                    resp.sendRedirect(uri + path +"?" + str3);
+//                    return;
+//                }
+//            }
+//            
+//        }
         final long searchStart = System.nanoTime();
         solrDispatchFilter.doFilter(request, servletResponse, filterChain);
         logSearch(request, System.nanoTime() - searchStart);
