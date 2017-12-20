@@ -169,9 +169,11 @@ public class SolrCoreServiceImpl implements SolrCoreService {
 
             // ensure the core file system structures exist and the core is activated in
             // SOLR
-            createAndActivateCore(engine);
+            if ( createAndActivateCore(engine) ) {
+                engines.put(engineName, engine);
+                
+            }
 
-            engines.put(engineName, engine);
         }
 
         configurationService.setRuntimeFlag("solr.initialized", true);
@@ -368,6 +370,16 @@ public class SolrCoreServiceImpl implements SolrCoreService {
     public boolean hasSolrCore(String name) {
         return engines.containsKey(name);
     }
+    @Override
+    public String getSolrCoreUri(String name) {
+        SolrCoreConfiguration config = engines.get(name);
+        if ( config !=null) {
+            if ( !config.getSolrClientType().equals(SolrClientType.EMBEDDED)) {
+                return config.getSolrClientURI();
+            }
+        }
+        return null;
+    }
 
     /**
      * Return the configuration of the enhancement engine with the given name, or
@@ -520,12 +532,12 @@ public class SolrCoreServiceImpl implements SolrCoreService {
      *
      * @param engine
      */
-    private void createAndActivateCore(SolrCoreConfiguration engine) {
+    private boolean createAndActivateCore(SolrCoreConfiguration engine) {
         // boolean activated;
 
         try {
             //
-            registerSolrCore(engine);
+            return registerSolrCore(engine);
 
         } catch (MarmottaException ex) {
             log.error("I/O error while trying to set up directory for SOLR core {}", engine.getName());
@@ -534,6 +546,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
             log.error("error while initialising SOLR core {}", engine.getName(), e);
             removeSolrCore(engine);
         }
+        return false;
     }
 
     private File getCoreDirectory(String coreName) {
@@ -941,9 +954,9 @@ public class SolrCoreServiceImpl implements SolrCoreService {
      * @param config
      * @throws MarmottaException
      */
-    private void registerSolrCore(SolrCoreConfiguration config) throws MarmottaException {
-        SolrCoreAdministration admin = new SolrCoreAdministration(getSolrClient(config));
+    private boolean registerSolrCore(SolrCoreConfiguration config) throws MarmottaException {
         try {
+            SolrCoreAdministration admin = new SolrCoreAdministration(getSolrClient(config));
             if (!admin.getCores().contains(config.getName())) {
                 if (config.getSolrClientType().equals(SolrClientType.EMBEDDED)) {
                     // can crate the file system only in EMBEDDED mode
@@ -963,7 +976,11 @@ public class SolrCoreServiceImpl implements SolrCoreService {
                 // reload the core so that the schema mapping is based on actual data
                 admin.reloadCore(config.getName());
             }
-
+            return true;
+        } catch (RuntimeException e) {
+            log.error(e.getMessage());
+            return false;
+        
         } catch (IOException e) {
             throw new MarmottaException(e);
         } catch (SolrServerException e) {

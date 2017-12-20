@@ -221,13 +221,20 @@ public class SolrCoreConfiguration extends WorkerConfiguration {
             }
         }
     }
-
+    /**
+     * Retrieve the solrCloudURI, <code>null</code> when core is 
+     * running in local/embedded.
+     * @return Teh core URI
+     */
 	public String getSolrClientURI() {
 		return Strings.emptyToNull(solrCloudURI);
 	}
-
+	/**
+	 * Set the solrCloud URI, for example <code>http://host_name:8983/solr</code>
+	 * @param solrCloudURI
+	 */
 	public void setSolrClientURI(String solrCloudURI) {
-	    if ( solrCloudURI.endsWith("/")) {
+	    if ( solrCloudURI !=null && solrCloudURI.endsWith("/")) {
 	        solrCloudURI = solrCloudURI.substring(0, solrCloudURI.length()-1);
 	    }
 		this.solrCloudURI = solrCloudURI;

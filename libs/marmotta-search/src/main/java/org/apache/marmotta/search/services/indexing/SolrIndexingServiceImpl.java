@@ -207,6 +207,7 @@ public class SolrIndexingServiceImpl extends WorkerServiceImpl<SolrCoreRuntime,S
                 return;
             }
         }
+        
 
         if (resource == null) return;
         final String coreName = runtime.getConfiguration().getName();
