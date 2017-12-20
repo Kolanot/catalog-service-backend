@@ -72,16 +72,16 @@ public class SolrProgramServiceImpl implements SolrProgramService {
     static {
         Map<String, String> typeMap = new HashMap<String, String>();
 
-        typeMap.put(Namespaces.NS_XSD + "decimal", "long");
-        typeMap.put(Namespaces.NS_XSD + "integer", "int");
-        typeMap.put(Namespaces.NS_XSD + "long", "long");
-        typeMap.put(Namespaces.NS_XSD + "short", "int");
-        typeMap.put(Namespaces.NS_XSD + "double", "double");
-        typeMap.put(Namespaces.NS_XSD + "float", "float");
-        typeMap.put(Namespaces.NS_XSD + "dateTime", "date");
-        typeMap.put(Namespaces.NS_XSD + "date", "date");
-        typeMap.put(Namespaces.NS_XSD + "time", "date");
-        typeMap.put(Namespaces.NS_XSD + "boolean", "boolean");
+        typeMap.put(Namespaces.NS_XSD + "decimal", "plong");
+        typeMap.put(Namespaces.NS_XSD + "integer", "pint");
+        typeMap.put(Namespaces.NS_XSD + "long", "plong");
+        typeMap.put(Namespaces.NS_XSD + "short", "pint");
+        typeMap.put(Namespaces.NS_XSD + "double", "pdouble");
+        typeMap.put(Namespaces.NS_XSD + "float", "pfloat");
+        typeMap.put(Namespaces.NS_XSD + "dateTime", "pdate");
+        typeMap.put(Namespaces.NS_XSD + "date", "pdate");
+        typeMap.put(Namespaces.NS_XSD + "time", "pdate");
+        typeMap.put(Namespaces.NS_XSD + "boolean", "pboolean");
         typeMap.put(Namespaces.NS_XSD + "anyURI", "uri");
         typeMap.put(Namespaces.NS_XSD + "string", "string");
 
