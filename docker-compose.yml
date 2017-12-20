@@ -5,10 +5,13 @@ services:
     build:
       context: .
       args:
+        DB_NAME: marmotta
         DB_HOST: marmotta-db
         DB_PORT: 5432
         DB_USER: root
-        DB_PASS: changeme
+        DB_PASSWORD: changeme
+        TOMCAT_USER: admin
+        TOMCAT_PASSWORD: changeme
     ports:
       - "8080:8080"
 

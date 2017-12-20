@@ -198,3 +198,5 @@ hs_err_pid*
 ### Custom ###
 .idea
 .gradle
+init_deploy.sh
+init_kubernetes_deploy.sh
