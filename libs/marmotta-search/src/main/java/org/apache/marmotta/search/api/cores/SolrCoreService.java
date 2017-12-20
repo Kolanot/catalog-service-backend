@@ -98,6 +98,14 @@ public interface SolrCoreService {
      * @return SolrClient for the core config
      * @throws MarmottaException
      */
-    SolrClient getSolrClient(SolrCoreConfiguration config);
+    public SolrClient getSolrClient(SolrCoreConfiguration config);
+    /**
+     * Retrieve the link to the remote SOLR core instance. Returns null if the 
+     * core is running in EMBEDDED mode.
+     * @param name
+     * @return The external core uri or <code>null</code> if local/embedded
+     */
+
+    public String getSolrCoreUri(String name);
 
 }
