@@ -36,6 +36,7 @@ import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.spi.EventMetadata;
 import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
@@ -269,15 +270,15 @@ public class SolrCoreServiceImpl implements SolrCoreService {
 
             String prefix = "solr.core." + engine.getName().toLowerCase();
 
-            configurationService.setIntConfiguration(prefix + ".workers", engine.getThreads());
+            configurationService.setConfigurationWithoutEvent(prefix + ".workers", engine.getThreads());
             configurationService.setType(prefix + ".workers", "java.lang.Integer(1|1|*)");
-            configurationService.setBooleanConfiguration(prefix + ".update_dependencies",
+            configurationService.setConfigurationWithoutEvent(prefix + ".update_dependencies",
                     engine.isUpdateDependencies());
             configurationService.setType(prefix + ".update_dependencies", "java.lang.Boolean");
-            configurationService.setBooleanConfiguration(prefix + ".clear_before_reschedule",
+            configurationService.setConfigurationWithoutEvent(prefix + ".clear_before_reschedule",
                     engine.isClearBeforeReschedule());
             configurationService.setType(prefix + ".clear_before_reschedule", "java.lang.Boolean");
-            configurationService.setIntConfiguration(prefix + ".queuesize", engine.getQueueSize());
+            configurationService.setConfigurationWithoutEvent(prefix + ".queuesize", engine.getQueueSize());
             configurationService.setType(prefix + ".queuesize", "java.lang.Integer(1000|1000|*)");
 
             boolean localOnly = false, omitCached = false;
@@ -293,58 +294,54 @@ public class SolrCoreServiceImpl implements SolrCoreService {
                 }
             }
 
-            configurationService.setBooleanConfiguration(prefix + ".local_only", localOnly);
+            configurationService.setConfigurationWithoutEvent(prefix + ".local_only", localOnly);
             configurationService.setType(prefix + ".local_only", "java.lang.Boolean");
-            configurationService.setBooleanConfiguration(prefix + ".omit_cached", omitCached);
+            configurationService.setConfigurationWithoutEvent(prefix + ".omit_cached", omitCached);
             configurationService.setType(prefix + ".omit_cached", "java.lang.Boolean");
 
             if (acceptPrefixes.size() > 0) {
-                configurationService.setListConfiguration(prefix + ".accept_prefixes",
+                configurationService.setConfigurationWithoutEvent(prefix + ".accept_prefixes",
                         new ArrayList<String>(acceptPrefixes));
             } else {
                 configurationService.removeConfiguration(prefix + ".accept_prefixes");
             }
 
-            configurationService.setConfiguration(prefix + ".program", engine.getProgramString());
+            configurationService.setConfigurationWithoutEvent(prefix + ".program", engine.getProgramString());
             configurationService.setType(prefix + ".program", "org.marmotta.type.Program");
 
             // optional
-            configurationService.setConfiguration(prefix + ".server_type", engine.getSolrClientType().name());
+            configurationService.setConfigurationWithoutEvent(prefix + ".server_type", engine.getSolrClientType().name());
             configurationService.setType(prefix + ".server_type", "java.lang.Enum(\"EMBEDDED\"|\"REMOTE\"|\"CLOUD\")");
             if (engine.getSolrClientURI() != null) {
-                configurationService.setConfiguration(prefix + ".server_uri", engine.getSolrClientURI());
+                configurationService.setConfigurationWithoutEvent(prefix + ".server_uri", engine.getSolrClientURI());
             } else {
                 configurationService.removeConfiguration(prefix + ".server_uri");
             }
             storing = false;
         }
     }
-
     /**
      * React to any changes in the configuration that may affect one of the engines
      *
      * @param event
      */
-    public void configurationChangedEvent(@Observes ConfigurationChangedEvent event) {
+    protected void configurationChangedEvent(@Observes ConfigurationChangedEvent event, EventMetadata meta) {
         if (event.containsChangedKeyWithPrefix("solr.core.")) {
-            synchronized (engines) {
-                if (!storing) {
-                    // a configuration option for the enhancer has been changed, check whether we
-                    // need to update any engine configuration
-                    for (Map.Entry<String, SolrCoreConfiguration> entry : engines.entrySet()) {
-                        for (String key : event.getKeys()) {
-                            if (key.startsWith("solr.core." + entry.getKey().toLowerCase())) {
-                                loadSolrCoreConfiguration(entry.getKey(), entry.getValue());
+            if (!storing) {
+                // a configuration option for the enhancer has been changed, check whether we
+                // need to update any engine configuration
+                for (Map.Entry<String, SolrCoreConfiguration> entry : engines.entrySet()) {
+                    for (String key : event.getKeys()) {
+                        if (key.startsWith("solr.core." + entry.getKey().toLowerCase())) {
+                            loadSolrCoreConfiguration(entry.getKey(), entry.getValue());
 
-                                // reloadSolrCore(entry.getKey());
+                            // reloadSolrCore(entry.getKey());
 
-                                coreUpdatedEvent.fire(entry.getValue());
-                            }
+                            coreUpdatedEvent.fire(entry.getValue());
                         }
                     }
                 }
             }
-
         }
     }
 
@@ -423,7 +420,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
             engine.setSolrClientURI(configurationService.getStringConfiguration("solr.server_uri", null));
 
             engines.put(engine.getName(), engine);
-            storeSolrCoreConfiguration(engine);
+            //storeSolrCoreConfiguration(engine);
 
             List<String> enabledEngines = new ArrayList<String>(
                     configurationService.getListConfiguration("solr.cores"));
@@ -431,9 +428,10 @@ public class SolrCoreServiceImpl implements SolrCoreService {
             configurationService.setListConfiguration("solr.cores", enabledEngines);
 
             // make sure the data structures for the core exist before the event is fired
-            createAndActivateCore(engine);
+            if ( createAndActivateCore(engine)) {
+                coreCreatedEvent.fire(engine);
+            }
 
-            coreCreatedEvent.fire(engine);
             return engine;
         } else {
             throw new CoreAlreadyExistsException("the engine with name " + name + " already exists");

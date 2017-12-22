@@ -71,6 +71,7 @@ public class SolrProgramServiceImpl implements SolrProgramService {
     public static final Map<String, String> xsdSolrTypeMap;
     static {
         Map<String, String> typeMap = new HashMap<String, String>();
+        typeMap.put(Namespaces.NS_XSD + "int", "pint");
 
         typeMap.put(Namespaces.NS_XSD + "decimal", "plong");
         typeMap.put(Namespaces.NS_XSD + "integer", "pint");
@@ -81,7 +82,7 @@ public class SolrProgramServiceImpl implements SolrProgramService {
         typeMap.put(Namespaces.NS_XSD + "dateTime", "pdate");
         typeMap.put(Namespaces.NS_XSD + "date", "pdate");
         typeMap.put(Namespaces.NS_XSD + "time", "pdate");
-        typeMap.put(Namespaces.NS_XSD + "boolean", "pboolean");
+        typeMap.put(Namespaces.NS_XSD + "boolean", "boolean");
         typeMap.put(Namespaces.NS_XSD + "anyURI", "uri");
         typeMap.put(Namespaces.NS_XSD + "string", "string");
 
