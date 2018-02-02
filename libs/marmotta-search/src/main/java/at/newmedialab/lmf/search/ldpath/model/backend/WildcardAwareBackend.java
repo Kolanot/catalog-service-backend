@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.marmotta.ldpath.backend.sesame.ContextAwareSesameConnectionBackend;
-import org.apache.marmotta.search.ldpath.model.DynKiwiLiteral;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
@@ -15,6 +14,8 @@ import org.openrdf.model.ValueFactory;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.RepositoryResult;
+
+import at.newmedialab.lmf.search.ldpath.model.DynKiwiLiteral;
 
 public class WildcardAwareBackend extends ContextAwareSesameConnectionBackend {
 	public static final String SEPARATOR = "@@";
