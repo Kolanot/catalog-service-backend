@@ -15,10 +15,9 @@
  */
 package org.apache.marmotta.search.api.indexing;
 
-import at.newmedialab.lmf.worker.api.WorkerService;
-
 import org.apache.marmotta.search.services.cores.SolrCoreConfiguration;
 import org.apache.marmotta.search.services.indexing.SolrCoreRuntime;
+import org.apache.marmotta.worker.api.WorkerService;
 import org.openrdf.model.Resource;
 
 import java.util.Collection;

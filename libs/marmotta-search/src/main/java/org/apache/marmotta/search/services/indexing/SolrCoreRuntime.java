@@ -27,6 +27,7 @@ import org.apache.marmotta.platform.core.util.CDIContext;
 import org.apache.marmotta.search.api.indexing.SolrIndexingService;
 import org.apache.marmotta.search.filters.LMFSearchFilter;
 import org.apache.marmotta.search.services.cores.SolrCoreConfiguration;
+import org.apache.marmotta.worker.services.WorkerRuntime;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -41,8 +42,6 @@ import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import at.newmedialab.lmf.worker.services.WorkerRuntime;
 
 /**
  * A class bundling administrative information about a running SOLR core.

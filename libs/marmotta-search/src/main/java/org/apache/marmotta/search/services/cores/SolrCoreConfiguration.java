@@ -11,6 +11,7 @@ import org.apache.marmotta.platform.core.model.filter.MarmottaLocalFilter;
 import org.apache.marmotta.platform.core.util.CDIContext;
 import org.apache.marmotta.platform.ldcache.model.filter.MarmottaNotCachedFilter;
 import org.apache.marmotta.search.filters.LMFSearchFilter;
+import org.apache.marmotta.worker.model.WorkerConfiguration;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
@@ -20,8 +21,6 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.Value;
 
 import com.google.common.base.Strings;
-
-import at.newmedialab.lmf.worker.model.WorkerConfiguration;
 
 /**
  * Configuration for a SOLR core.

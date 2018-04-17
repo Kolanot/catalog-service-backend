@@ -52,6 +52,8 @@ import org.apache.marmotta.search.api.program.SolrProgramService;
 import org.apache.marmotta.search.ldpath.model.DynamicValue;
 import org.apache.marmotta.search.ldpath.model.backend.WildcardAwareBackend;
 import org.apache.marmotta.search.services.cores.SolrCoreConfiguration;
+import org.apache.marmotta.worker.services.WorkerRuntime;
+import org.apache.marmotta.worker.services.WorkerServiceImpl;
 import org.apache.solr.common.SolrInputDocument;
 import org.openrdf.model.BNode;
 import org.openrdf.model.Resource;
@@ -65,9 +67,6 @@ import org.slf4j.Logger;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
-
-import at.newmedialab.lmf.worker.services.WorkerRuntime;
-import at.newmedialab.lmf.worker.services.WorkerServiceImpl;
 
 /**
  * Add file description here!

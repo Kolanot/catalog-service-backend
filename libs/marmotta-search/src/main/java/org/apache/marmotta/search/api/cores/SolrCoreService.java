@@ -18,12 +18,10 @@ package org.apache.marmotta.search.api.cores;
 import java.util.List;
 
 import org.apache.marmotta.ldpath.exception.LDPathParseException;
-import org.apache.marmotta.ldpath.model.programs.Program;
 import org.apache.marmotta.platform.core.exception.MarmottaException;
 import org.apache.marmotta.search.exception.CoreAlreadyExistsException;
 import org.apache.marmotta.search.services.cores.SolrCoreConfiguration;
 import org.apache.solr.client.solrj.SolrClient;
-import org.openrdf.model.Value;
 
 /**
  * The SolrCoreService allows to manage SOLR cores for different path programs.

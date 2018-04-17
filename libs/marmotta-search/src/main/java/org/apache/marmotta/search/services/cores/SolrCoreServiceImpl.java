@@ -170,9 +170,9 @@ public class SolrCoreServiceImpl implements SolrCoreService {
 
             // ensure the core file system structures exist and the core is activated in
             // SOLR
-            if ( createAndActivateCore(engine) ) {
+            if (createAndActivateCore(engine)) {
                 engines.put(engineName, engine);
-                
+
             }
 
         }
@@ -248,11 +248,11 @@ public class SolrCoreServiceImpl implements SolrCoreService {
             serverType = SolrCoreConfiguration.SolrClientType.EMBEDDED.name();
             serverUri = null;
         }
-        serverType = configurationService
-                .getStringConfiguration("solr.core." + name.toLowerCase() + ".server_type", serverType);
+        serverType = configurationService.getStringConfiguration("solr.core." + name.toLowerCase() + ".server_type",
+                serverType);
         engine.setSolrClientType(serverType);
-        serverUri = configurationService
-                .getStringConfiguration("solr.core." + name.toLowerCase() + ".server_uri", serverUri);
+        serverUri = configurationService.getStringConfiguration("solr.core." + name.toLowerCase() + ".server_uri",
+                serverUri);
         engine.setSolrClientURI(serverUri);
 
         if (configurationService.getBooleanConfiguration("solr.core." + name.toLowerCase() + ".schedule_program_filter",
@@ -310,7 +310,8 @@ public class SolrCoreServiceImpl implements SolrCoreService {
             configurationService.setType(prefix + ".program", "org.marmotta.type.Program");
 
             // optional
-            configurationService.setConfigurationWithoutEvent(prefix + ".server_type", engine.getSolrClientType().name());
+            configurationService.setConfigurationWithoutEvent(prefix + ".server_type",
+                    engine.getSolrClientType().name());
             configurationService.setType(prefix + ".server_type", "java.lang.Enum(\"EMBEDDED\"|\"REMOTE\"|\"CLOUD\")");
             if (engine.getSolrClientURI() != null) {
                 configurationService.setConfigurationWithoutEvent(prefix + ".server_uri", engine.getSolrClientURI());
@@ -320,6 +321,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
             storing = false;
         }
     }
+
     /**
      * React to any changes in the configuration that may affect one of the engines
      *
@@ -367,11 +369,12 @@ public class SolrCoreServiceImpl implements SolrCoreService {
     public boolean hasSolrCore(String name) {
         return engines.containsKey(name);
     }
+
     @Override
     public String getSolrCoreUri(String name) {
         SolrCoreConfiguration config = engines.get(name);
-        if ( config !=null) {
-            if ( !config.getSolrClientType().equals(SolrClientType.EMBEDDED)) {
+        if (config != null) {
+            if (!config.getSolrClientType().equals(SolrClientType.EMBEDDED)) {
                 return config.getSolrClientURI();
             }
         }
@@ -420,7 +423,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
             engine.setSolrClientURI(configurationService.getStringConfiguration("solr.server_uri", null));
 
             engines.put(engine.getName(), engine);
-            //storeSolrCoreConfiguration(engine);
+            // storeSolrCoreConfiguration(engine);
 
             List<String> enabledEngines = new ArrayList<String>(
                     configurationService.getListConfiguration("solr.cores"));
@@ -428,7 +431,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
             configurationService.setListConfiguration("solr.cores", enabledEngines);
 
             // make sure the data structures for the core exist before the event is fired
-            if ( createAndActivateCore(engine)) {
+            if (createAndActivateCore(engine)) {
                 coreCreatedEvent.fire(engine);
             }
 
@@ -439,14 +442,16 @@ public class SolrCoreServiceImpl implements SolrCoreService {
     }
 
     /**
-     * Update the configuration of the enhancement engine given as argument.
-     * with the new program string
+     * Update the configuration of the enhancement engine given as argument. with
+     * the new program string
      * <p/>
      * Note that this method merely updates the configuration and does not
      * automatically re-run the enhancement process for all resources.
      *
-     * @param engine The configuration to update
-     * @param program The changed program string
+     * @param engine
+     *            The configuration to update
+     * @param program
+     *            The changed program string
      */
     @Override
     public void updateSolrCore(SolrCoreConfiguration engine, String program) {
@@ -455,13 +460,13 @@ public class SolrCoreServiceImpl implements SolrCoreService {
             Program<Value> newProgram = solrProgramService.parseProgram(new StringReader(program));
             if (engines.containsKey(engine.getName())) {
                 // update the engine
-                if ( updateSolrCore(engine, newProgram) ) {
-                    // store the new program in the engine's config 
+                if (updateSolrCore(engine, newProgram)) {
+                    // store the new program in the engine's config
                     engine.setProgram(newProgram);
                     engine.setProgramString(program);
                     // store the config in marmotta's config
                     storeSolrCoreConfiguration(engine);
-                    
+
                     coreUpdatedEvent.fire(engine);
 
                 }
@@ -488,7 +493,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
     @Override
     public void removeSolrCore(SolrCoreConfiguration engine) {
         if (engines.containsKey(engine.getName())) {
-            
+
             if (unregisterSolrCore(engine)) {
                 // remove from the list of configurations
                 engines.remove(engine.getName());
@@ -502,17 +507,18 @@ public class SolrCoreServiceImpl implements SolrCoreService {
             }
         }
     }
+
     @Override
     public SolrClient getSolrClient(SolrCoreConfiguration config) {
         SolrClient server;
         switch (config.getSolrClientType()) {
         case REMOTE:
             server = new HttpSolrClient.Builder().withBaseSolrUrl(config.getSolrClientURI()).build();
-//            log.debug("({}) created Remote SolrServer", getName());
+            // log.debug("({}) created Remote SolrServer", getName());
             break;
         case CLOUD:
             server = new CloudSolrClient.Builder().withSolrUrl(config.getSolrClientURI()).build();
-//            log.debug("({}) created Cloud SolrServer", getName());
+            // log.debug("({}) created Cloud SolrServer", getName());
             break;
         default:
             server = new EmbeddedSolrServer(searchFilter.getCores(), config.getName());
@@ -765,8 +771,10 @@ public class SolrCoreServiceImpl implements SolrCoreService {
         }
 
     }
+
     /**
      * check whether a field already exists
+     * 
      * @todo REMOVE
      * @param schemaNode
      * @param fieldType
@@ -791,9 +799,11 @@ public class SolrCoreServiceImpl implements SolrCoreService {
         return false;
 
     }
+
     /**
-     * Method to create a field/dynamic field in the schema.xml file
-     * handles copyField for suggestion
+     * Method to create a field/dynamic field in the schema.xml file handles
+     * copyField for suggestion
+     * 
      * @param schemaNode
      * @param fieldElement
      * @param fieldName
@@ -890,6 +900,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
     /**
      * Create/update the solrconfig.xml file for the given core according to the
      * core configuration.
+     * 
      * @TODO: REMOVE
      * @deprecated
      * @param engine
@@ -978,7 +989,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
         } catch (RuntimeException e) {
             log.error(e.getMessage());
             return false;
-        
+
         } catch (IOException e) {
             throw new MarmottaException(e);
         } catch (SolrServerException e) {
@@ -994,8 +1005,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
                 SolrSchema schema = admin.getSchema(config.getName());
                 return processSchema(schema, newProgram, config.getProgram());
 
-            }
-            else {
+            } else {
                 // TODO: check the option of creating on update
             }
             return false;
@@ -1004,10 +1014,14 @@ public class SolrCoreServiceImpl implements SolrCoreService {
         }
 
     }
-    /** 
+
+    /**
      * Process SOLR schema change
-     * @param schema The <i>original, newly created</i> schema.
-     * @param program The search program with the list of fields to be added
+     * 
+     * @param schema
+     *            The <i>original, newly created</i> schema.
+     * @param program
+     *            The search program with the list of fields to be added
      * @return <code>true</code> on success, <code>false</code> otherwise
      * @throws MarmottaException
      */
@@ -1015,11 +1029,17 @@ public class SolrCoreServiceImpl implements SolrCoreService {
         return processSchema(schema, program, null);
     }
 
-    /** 
+    /**
      * Process SOLR schema update
-     * @param schema The <i>stored, modified</i> schema containing declarations for the <b>oldProgram</b>.
-     * @param program The search program with the list of fields to be stored in the schema
-     * @param oldProgram The search program currently contained in the schema
+     * 
+     * @param schema
+     *            The <i>stored, modified</i> schema containing declarations for the
+     *            <b>oldProgram</b>.
+     * @param program
+     *            The search program with the list of fields to be stored in the
+     *            schema
+     * @param oldProgram
+     *            The search program currently contained in the schema
      * @return <code>true</code> on success, <code>false</code> otherwise
      * @throws MarmottaException
      */
@@ -1037,9 +1057,11 @@ public class SolrCoreServiceImpl implements SolrCoreService {
             throw new MarmottaException(e);
         }
     }
+
     /**
-     * Verify the provided schema and create the list of {@link SolrField} 
-     * based on the  
+     * Verify the provided schema and create the list of {@link SolrField} based on
+     * the
+     * 
      * @param schema
      * @param program
      * @return
@@ -1069,9 +1091,7 @@ public class SolrCoreServiceImpl implements SolrCoreService {
                 SolrField f = processField(schema, field, false);
                 if (f != null)
                     createdElements.add(f);
-                
-                System.out.println(
-                        String.format("Need to create %s with type %s", map.getFieldName(), map.getFieldType()));
+                log.debug("Need to create field [{}] with type [{}]", map.getFieldName(), map.getFieldType());
             }
         }
         return createdElements;
@@ -1142,8 +1162,10 @@ public class SolrCoreServiceImpl implements SolrCoreService {
         }
         return null;
     }
+
     /**
      * Reload the core
+     * 
      * @param config
      */
     private void reloadSolrCore(SolrCoreConfiguration config) {
@@ -1157,14 +1179,14 @@ public class SolrCoreServiceImpl implements SolrCoreService {
         }
     }
 
-
     private boolean unregisterSolrCore(SolrCoreConfiguration config) {
         try {
             SolrCoreAdministration adminHelper = new SolrCoreAdministration(getSolrClient(config));
             log.info("unregistering/removing core {} ", config.getName());
             return adminHelper.removeCore(config.getName());
         } catch (SolrServerException e) {
-            log.error("error when unregistering/removing core {} - reason: {}", config.getName(), e.getLocalizedMessage());
+            log.error("error when unregistering/removing core {} - reason: {}", config.getName(),
+                    e.getLocalizedMessage());
             e.printStackTrace();
         }
         return false;
