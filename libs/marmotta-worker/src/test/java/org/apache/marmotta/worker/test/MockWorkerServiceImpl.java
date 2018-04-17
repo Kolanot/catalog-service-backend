@@ -1,9 +1,9 @@
-package at.newmedialab.lmf.worker.test;
+package org.apache.marmotta.worker.test;
 
-import at.newmedialab.lmf.worker.services.WorkerRuntime;
-import at.newmedialab.lmf.worker.services.WorkerServiceImpl;
 import org.apache.marmotta.commons.sesame.filter.SesameFilter;
 import org.apache.marmotta.platform.core.api.task.TaskManagerService;
+import org.apache.marmotta.worker.services.WorkerRuntime;
+import org.apache.marmotta.worker.services.WorkerServiceImpl;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.slf4j.Logger;

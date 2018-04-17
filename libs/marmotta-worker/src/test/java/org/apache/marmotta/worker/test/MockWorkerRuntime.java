@@ -1,8 +1,8 @@
-package at.newmedialab.lmf.worker.test;
+package org.apache.marmotta.worker.test;
 
-import at.newmedialab.lmf.worker.model.WorkerConfiguration;
-import at.newmedialab.lmf.worker.services.WorkerRuntime;
 import org.apache.marmotta.platform.core.api.task.TaskManagerService;
+import org.apache.marmotta.worker.model.WorkerConfiguration;
+import org.apache.marmotta.worker.services.WorkerRuntime;
 import org.openrdf.model.Resource;
 
 import java.util.ArrayList;

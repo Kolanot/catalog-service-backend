@@ -1,12 +1,11 @@
-package at.newmedialab.lmf.worker.api;
+package org.apache.marmotta.worker.api;
 
 import java.util.List;
 
 import org.apache.marmotta.commons.sesame.transactions.model.TransactionData;
+import org.apache.marmotta.worker.model.WorkerConfiguration;
+import org.apache.marmotta.worker.services.WorkerRuntime;
 import org.openrdf.model.Resource;
-
-import at.newmedialab.lmf.worker.model.WorkerConfiguration;
-import at.newmedialab.lmf.worker.services.WorkerRuntime;
 
 /**
  * The worker service manages and runs the configured LMF workers and provides common utility functions,

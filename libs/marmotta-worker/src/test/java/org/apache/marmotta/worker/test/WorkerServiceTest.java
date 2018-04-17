@@ -1,4 +1,4 @@
-package at.newmedialab.lmf.worker.test;
+package org.apache.marmotta.worker.test;
 
 import org.apache.marmotta.commons.sesame.filter.AllOfFilter;
 import org.apache.marmotta.commons.sesame.filter.SesameFilter;

@@ -1,4 +1,4 @@
-package at.newmedialab.lmf.worker.model;
+package org.apache.marmotta.worker.model;
 
 /**
  * Represents the status of a resource in a worker configuration

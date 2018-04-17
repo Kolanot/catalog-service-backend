@@ -1,4 +1,4 @@
-package at.newmedialab.lmf.worker.services;
+package org.apache.marmotta.worker.services;
 
 import static org.apache.marmotta.commons.sesame.repository.ExceptionUtils.handleRepositoryException;
 import static org.apache.marmotta.commons.sesame.repository.ResourceUtils.listResources;
@@ -22,14 +22,13 @@ import org.apache.marmotta.platform.core.api.config.ConfigurationService;
 import org.apache.marmotta.platform.core.api.statistics.StatisticsModule;
 import org.apache.marmotta.platform.core.api.statistics.StatisticsService;
 import org.apache.marmotta.platform.core.api.triplestore.SesameService;
+import org.apache.marmotta.worker.api.WorkerService;
+import org.apache.marmotta.worker.model.WorkerConfiguration;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.slf4j.Logger;
-
-import at.newmedialab.lmf.worker.api.WorkerService;
-import at.newmedialab.lmf.worker.model.WorkerConfiguration;
 
 /**
  * Add file description here!

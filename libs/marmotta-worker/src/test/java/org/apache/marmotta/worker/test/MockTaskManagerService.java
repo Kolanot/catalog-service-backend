@@ -1,4 +1,4 @@
-package at.newmedialab.lmf.worker.test;
+package org.apache.marmotta.worker.test;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.marmotta.platform.core.api.task.Task;

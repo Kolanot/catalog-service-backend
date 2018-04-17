@@ -1,4 +1,4 @@
-package at.newmedialab.lmf.worker.model;
+package org.apache.marmotta.worker.model;
 
 /*
  * This implementation has been copied from

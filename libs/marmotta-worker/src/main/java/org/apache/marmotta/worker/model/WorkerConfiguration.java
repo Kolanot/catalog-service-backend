@@ -1,4 +1,4 @@
-package at.newmedialab.lmf.worker.model;
+package org.apache.marmotta.worker.model;
 
 import org.apache.marmotta.commons.sesame.filter.AlwaysTrueFilter;
 import org.apache.marmotta.commons.sesame.filter.SesameFilter;

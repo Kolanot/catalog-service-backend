@@ -1,7 +1,7 @@
-package at.newmedialab.lmf.worker.test;
+package org.apache.marmotta.worker.test;
 
-import at.newmedialab.lmf.worker.model.WorkerConfiguration;
 import org.apache.marmotta.commons.sesame.filter.SesameFilter;
+import org.apache.marmotta.worker.model.WorkerConfiguration;
 import org.openrdf.model.Resource;
 
 import java.util.Set;

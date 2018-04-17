@@ -1,12 +1,12 @@
-package at.newmedialab.lmf.worker.services;
+package org.apache.marmotta.worker.services;
 
-import at.newmedialab.lmf.worker.model.ResourceStatus;
-import at.newmedialab.lmf.worker.model.WorkerConfiguration;
 import org.apache.marmotta.platform.core.api.statistics.StatisticsModule;
 import org.apache.marmotta.platform.core.api.task.Task;
 import org.apache.marmotta.platform.core.api.task.TaskManagerService;
 import org.apache.marmotta.platform.core.util.CDIContext;
 import org.apache.marmotta.platform.core.util.LinkedHashSetBlockingQueue;
+import org.apache.marmotta.worker.model.ResourceStatus;
+import org.apache.marmotta.worker.model.WorkerConfiguration;
 import org.openrdf.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
