@@ -17,7 +17,19 @@ node('nimble-jenkins-slave') {
         sh 'docker build -t nimbleplatform/marmotta .'
     }
 
-    if (env.BRANCH_NAME == 'master') {
+    if (env.BRANCH_NAME == 'staging') {
+        stage('Build Docker') {
+            sh '/bin/bash -xe util.sh docker-build-staging'
+        }
+
+        stage('Push Docker') {
+            sh 'docker push nimbleplatform/marmotta:staging'
+        }
+
+        stage('Deploy') {
+            sh 'ssh staging "cd /srv/nimble-staging/ && ./run-staging.sh marmotta"'
+        }
+    } else {
         stage('Deploy') {
             sh 'ssh nimble "cd /data/deployment_setup/prod/infra/marmotta/ && sudo ./run.sh deploy"'
         }
