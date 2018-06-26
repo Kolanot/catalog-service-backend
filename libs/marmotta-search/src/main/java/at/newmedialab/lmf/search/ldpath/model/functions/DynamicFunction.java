@@ -46,11 +46,14 @@ public class DynamicFunction extends SelectorFunction<Value> {
 		if ( args.length > 3 ) {
 			throw new IllegalArgumentException("wrong usage: " + getSignature());
 		}
-		if ( args.length == 3 && args[1].size()!= args[2].size()) {
+		if ( args.length == 3 && args[1].size()!= args[2].size() && args[2].size() != 1) {
 			throw new IllegalArgumentException("wrong usage: " + getSignature());
 		}
 		if (args.length != 2 && args[0].size() != 1) {
 			throw new IllegalArgumentException("wrong usage: " + getSignature());
+		}
+		if ( args.length == 3 && args[2].size() == 0 ) {
+		    throw new IllegalArgumentException("wrong usage: " + getSignature());
 		}
 		String fieldName = null;
 		// String fieldValue = null;
@@ -95,10 +98,14 @@ public class DynamicFunction extends SelectorFunction<Value> {
 		qualifiers.toArray(qArray);
 		Value[] vArray = new Value[values.size()];
 		values.toArray(vArray);
-		
-		for ( int i = 0; i < qArray.length; i++) {
+		// handle unitMapping - when only one unit provided (qArray.length is 1) 
+		boolean mapUnit = false;
+		if ( qArray.length == 1 && vArray.length > 1) {
+		    mapUnit = true;
+		}
+		for ( int i = 0; i < vArray.length; i++) {
 			// access the extension element
-			Value qualifier = qArray[i];
+			Value qualifier = (mapUnit ? qArray[0] : qArray[i]);
 			// access the value element
 			Value value = vArray[i];
 			String extension = "";
