@@ -73,7 +73,7 @@ public class SolrProgramServiceImpl implements SolrProgramService {
     static {
         Map<String, String> typeMap = new HashMap<String, String>();
 
-        typeMap.put(Namespaces.NS_XSD + "decimal", "long");
+        typeMap.put(Namespaces.NS_XSD + "decimal", "double");
         typeMap.put(Namespaces.NS_XSD + "integer", "int");
         typeMap.put(Namespaces.NS_XSD + "long", "long");
         typeMap.put(Namespaces.NS_XSD + "short", "int");

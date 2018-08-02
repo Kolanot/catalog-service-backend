@@ -46,12 +46,9 @@ public class DynamicFunction extends SelectorFunction<Value> {
 		if ( args.length > 3 ) {
 			throw new IllegalArgumentException("wrong usage: " + getSignature());
 		}
-		if ( args.length == 3 && args[1].size()!= args[2].size() && args[2].size() != 1) {
-			throw new IllegalArgumentException("wrong usage: " + getSignature());
-		}
-		if (args.length != 2 && args[0].size() != 1) {
-			throw new IllegalArgumentException("wrong usage: " + getSignature());
-		}
+//		if ( args.length == 3 && args[1].size()!= args[2].size() && args[2].size() != 1) {
+//			throw new IllegalArgumentException("wrong usage: " + getSignature());
+//		}
 		if ( args.length == 3 && args[2].size() == 0 ) {
 		    throw new IllegalArgumentException("wrong usage: " + getSignature());
 		}
@@ -65,7 +62,7 @@ public class DynamicFunction extends SelectorFunction<Value> {
 			}
 
 		}
-		if (backend instanceof WildcardAwareBackend) {
+		if (fieldName != null && backend instanceof WildcardAwareBackend) {
 			if ( args.length == 2) { // name and values provided
 				Collection<String> values = processArguments(args[1]);
 				return ((WildcardAwareBackend) backend).createDynLiteralCollection(fieldName, values);
