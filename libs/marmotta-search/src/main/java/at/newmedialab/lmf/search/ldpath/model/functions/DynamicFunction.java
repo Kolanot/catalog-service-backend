@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.marmotta.kiwi.model.rdf.KiWiLiteral;
@@ -50,7 +49,7 @@ public class DynamicFunction extends SelectorFunction<Value> {
 //			throw new IllegalArgumentException("wrong usage: " + getSignature());
 //		}
 		if ( args.length == 3 && args[2].size() == 0 ) {
-		    throw new IllegalArgumentException("wrong usage: " + getSignature());
+		    return Collections.<Value>emptyList();
 		}
 		String fieldName = null;
 		// String fieldValue = null;
