@@ -1,0 +1,54 @@
+@prefix cat: <urn:oasis:names:specification:ubl:schema:xsd:Catalogue-2#> ;
+@prefix cac: <urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#> ;
+@prefix cbc: <urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2#> ;
+
+
+@filter rdf:type is cac:CatalogueLineType ;
+
+item_id = cbc:ID :: xsd:string;
+item_catalogue_id = cac:GoodsItem / cac:Item / cac:CatalogueDocumentReference / cbc:ID :: xsd:string;
+item_name = cac:GoodsItem / cac:Item / fn:first(cbc:Name[rdf:type is cbc:TextType] /cbc:Value,cbc:Name) :: xsd:string (suggestionType="facet");
+item_description = cac:GoodsItem / cac:Item / fn:first(cbc:Description[rdf:type is cbc:TextType] /cbc:Value , cbc:Description) :: xsd:string ;
+item_image = cac:GoodsItem / cac:Item / cbc:ProductImage / cbc:ValueBinary :: xsd:string ;
+
+item_price = cac:RequiredItemLocationQuantity /  cac:Price /  cbc:PriceAmount / cbc:ValueDecimal :: xsd:double;
+item_price_currency = cac:RequiredItemLocationQuantity / cac:Price /  cbc:PriceAmount / cbc:currencyID :: xsd:string;
+item_free_of_charge_indicator = cbc:FreeOfChargeIndicator :: xsd:boolean;
+item_certificate = cac:GoodsItem / cac:Item / cac:Certificate / cbc:CertificateType :: xsd:string;
+item_applicable_countries = cac:RequiredItemLocationQuantity / cac:ApplicableTerritoryAddress / cac:Country / fn:first(cbc:Name[rdf:type is cbc:TextType] /cbc:Value , cbc:Name) :: xsd:string;
+
+item_manufacturer_name = cac:GoodsItem / cac:Item / cac:ManufacturerParty / fn:first(cbc:Name[rdf:type is cbc:TextType] /cbc:Value, cbc:Name) :: xsd:string;
+item_manufacturer_id = cac:GoodsItem / cac:Item / cac:ManufacturerParty / cbc:ID :: xsd:string;
+item_manufacturer_origin = cac:GoodsItem / cac:Item / cac:ManufacturerParty / cac:PostalAddress / cac:Country / fn:first(cbc:Name[rdf:type is cbc:TextType] /cbc:Value, cbc:Name) :: xsd:string;
+manufacturer_certificate = cac:GoodsItem / cac:Item / cac:ManufacturerParty / cac:Certificate / cbc:CertificateType :: xsd:string;
+manufacturer_ppap_compliance_level = cac:GoodsItem / cac:Item / cac:ManufacturerParty / cbc:PpapCompatibilityLevel :: xsd:double;
+manufacturer_ppap_document = cac:GoodsItem / cac:Item / cac:ManufacturerParty / cac:PpapDocumentReference / cbc:DocumentType :: xsd:string;
+
+item_estimated_delivery_time = cac:GoodsItem / cac:DeliveryTerms / cac:EstimatedDeliveryPeriod / cbc:DurationMeasure / cbc:ValueDecimal :: xsd:double;
+item_estimated_delivery_time_unit = cac:GoodsItem / cac:DeliveryTerms / cac:EstimatedDeliveryPeriod / cbc:DurationMeasure / cbc:unitCode :: xsd:string;
+item_package_amount = cac:GoodsItem / cac:ContainingPackage / cbc:Quantity / cbc:ValueDecimal :: xsd:double;
+item_package_amount_unit = cac:GoodsItem / cac:ContainingPackage / cbc:Quantity / cbc:unitCode :: xsd:string;
+item_package_type = cac:GoodsItem / cac:ContainingPackage / cbc:PackagingTypeCode / cbc:Value :: xsd:string;
+item_commodity_classification_code = cac:GoodsItem / cac:Item / cac:CommodityClassification / cbc:ItemClassificationCode :: xsd:anyURI;
+item_commodity_classification = cac:GoodsItem / cac:Item / cac:CommodityClassification / cbc:ItemClassificationCode / cbc:name :: xsd:string;
+item_commodity_classification_uri = cac:GoodsItem / cac:Item / cac:CommodityClassification / cbc:ItemClassificationCode / cbc:URI :: xsd:string;
+item_commodity_classification_mix = cac:GoodsItem / cac:Item / cac:CommodityClassification / cbc:ItemClassificationCode / fn:concat(cbc:URI, ":", cbc:name) :: xsd:string;
+item_properties = cac:GoodsItem / cac:Item / cac:AdditionalItemProperty / fn:first(cbc:Name[rdf:type is cbc:TextType] /cbc:Value, cbc:Name) :: xsd:string;
+
+service_type = cac:GoodsItem / cac:Item / cac:TransportationServiceDetails / cbc:TransportServiceCode / cbc:name :: xsd:string;
+supported_product_nature = cac:GoodsItem / cac:Item / cac:TransportationServiceDetails / cac:SupportedCommodityClassification / cbc:CargoTypeCode / cbc:name :: xsd:string;
+supported_cargo_type = cac:GoodsItem / cac:Item / cac:TransportationServiceDetails / cac:SupportedCommodityClassification /  cbc:NatureCode / cbc:name :: xsd:string;
+total_capacity = cac:GoodsItem / cac:Item / cac:TransportationServiceDetails / cac:TotalCapacityDimension / cbc:Measure / cbc:ValueDecimal :: xsd:double;
+total_capacity_unit = cac:GoodsItem / cac:Item / cac:TransportationServiceDetails / cac:TotalCapacityDimension / cbc:Measure / cbc:unitCode :: xsd:string;
+mode = cac:GoodsItem / cac:Item / cac:TransportationServiceDetails / cac:ShipmentStage / cbc:TransportModeCode / cbc:name :: xsd:string;
+emission_standard = cac:GoodsItem / cac:Item / cac:TransportationServiceDetails / cac:EnvironmentalEmission / cbc:EnvironmentalEmissionTypeCode / cbc:name :: xsd:string;
+estimated_duration = cac:GoodsItem / cac:Item / cac:TransportationServiceDetails / cac:EstimatedDurationPeriod / cbc:DurationMeasure / cbc:ValueDecimal :: xsd:double;
+estimated_duration_unit = cac:GoodsItem / cac:Item / cac:TransportationServiceDetails / cac:EstimatedDurationPeriod / cbc:DurationMeasure / cbc:unitCode :: xsd:string;
+
+df_unit = cac:GoodsItem / cac:Item / cac:AdditionalItemProperty[cbc:ValueQualifier is "QUANTITY"] / fn:dynamic(fn:first(cbc:Name[rdf:type is cbc:TextType] /cbc:Value, cbc:Name), cbc:ValueQuantity/cbc:unitCode) | cac:GoodsItem / cac:Item / cac:Dimension / fn:dynamic(cbc:AttributeID, cbc:Measure/cbc:unitCode) :: lmf:dynamic (dynamicField="*_unit", solrType="string") ;
+df_value = cac:GoodsItem / cac:Item / cac:AdditionalItemProperty[cbc:ValueQualifier is "QUANTITY"] / fn:dynamic(fn:first(cbc:Name[rdf:type is cbc:TextType] /cbc:Value, cbc:Name), cbc:ValueQuantity/cbc:ValueDecimal) | cac:GoodsItem / cac:Item / cac:Dimension / fn:dynamic(cbc:AttributeID, cbc:Measure/cbc:ValueDecimal) :: lmf:dynamic (dynamicField="*_value", solrType="double") ;
+df_qualified = cac:GoodsItem / cac:Item / cac:AdditionalItemProperty[cbc:ValueQualifier is "QUANTITY"] / fn:dynamic(fn:first(cbc:Name[rdf:type is cbc:TextType] /cbc:Value, cbc:Name), cbc:ValueQuantity/cbc:ValueDecimal, cbc:ValueQuantity/cbc:unitCode) | cac:GoodsItem / cac:Item / cac:Dimension / fn:dynamic(cbc:AttributeID, cbc:Measure/cbc:ValueDecimal, cbc:Measure/cbc:unitCode) :: lmf:dynamic (dynamicField="*_q", solrType="double") ;
+df_d = cac:GoodsItem / cac:Item / cac:AdditionalItemProperty[cbc:ValueQualifier is "REAL_MEASURE"] / fn:dynamic(fn:first(cbc:Name[rdf:type is cbc:TextType] /cbc:Value, cbc:Name), cbc:ValueDecimal) :: lmf:dynamic (dynamicField="*_d", solrType="double") ;
+df_s = cac:GoodsItem / cac:Item / cac:AdditionalItemProperty[cbc:ValueQualifier is "STRING"] / fn:dynamic(fn:first(cbc:Name[rdf:type is cbc:TextType] /cbc:Value, cbc:Name), cbc:Value / cbc:Value) :: lmf:dynamic (dynamicField="*_s", solrType="string") ;
+df_st = cac:GoodsItem / cac:Item / cac:AdditionalItemProperty[cbc:ValueQualifier is "STRING_TRANSLATABLE"] / fn:dynamic(fn:first(cbc:Name[rdf:type is cbc:TextType] /cbc:Value, cbc:Name), cbc:Value / cbc:Value) :: lmf:dynamic (dynamicField="*_st", solrType="string") ;
+df_b = cac:GoodsItem / cac:Item / cac:AdditionalItemProperty[cbc:ValueQualifier is "BOOLEAN"] / fn:dynamic(fn:first(cbc:Name[rdf:type is cbc:TextType] /cbc:Value, cbc:Name), cbc:Value / cbc:Value) :: lmf:dynamic (dynamicField="*_b", solrType="boolean") ;
