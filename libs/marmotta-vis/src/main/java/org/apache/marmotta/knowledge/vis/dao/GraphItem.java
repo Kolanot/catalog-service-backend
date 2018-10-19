@@ -5,5 +5,9 @@ public class GraphItem extends BaseItem {
 	public Integer getNetworkCount() {
 		return getCount();
 	}
-	
+
+    public String getGraph() {
+        return super.getId();
+    }
+	    
 }

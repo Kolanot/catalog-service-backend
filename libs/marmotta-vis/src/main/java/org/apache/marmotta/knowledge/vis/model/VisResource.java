@@ -9,6 +9,7 @@ import org.apache.marmotta.knowledge.vis.ns.DCTERMS;
 import org.apache.marmotta.knowledge.vis.ns.RDFS;
 import org.apache.marmotta.knowledge.vis.ns.VIS;
 import org.openrdf.annotations.Iri;
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.repository.object.LangString;
 import org.openrdf.repository.object.RDFObject;
@@ -164,6 +165,8 @@ public interface VisResource extends RDFObject {
 	public abstract void setComment(String label);
 	public abstract String getComment(Locale locale);
 	public abstract void setComment(String label, Locale locale);
+	
+	public abstract Resource getRdfsRange();
 
     @Iri(DCTERMS.description)
     public abstract Set<LangString> getDefinitions();

@@ -2,9 +2,11 @@ package org.apache.marmotta.knowledge.vis.services;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -67,6 +69,14 @@ public class TypeServiceImpl implements TypeService {
 		}
 		return null;
 	}
+	private Resource getRange(RepositoryConnection conn, String resource) throws RepositoryException {
+	    Resource res = conn.getValueFactory().createURI(resource);
+	    String range = ResourceUtils.getProperty(conn, res, RDFS.range);
+	    if ( range == null ) {
+	        return XSD.String;
+	    }
+	    return conn.getValueFactory().createURI(range);
+	}
 
 
 	@Override
@@ -92,7 +102,7 @@ public class TypeServiceImpl implements TypeService {
 			
 			VisNetwork visProject = getVisResource(conn, VisNetwork.class, uri);
 			if ( visProject != null ) {
-				return makeNetworkType(visProject, locale);
+				return makeNetworkType(conn, visProject, locale);
 			} 
 		}catch (ClassCastException e) {
 		}
@@ -107,7 +117,7 @@ public class TypeServiceImpl implements TypeService {
 			if ( visNodeType != null ) {
 				// check whether the network itself is marked as editable
 				boolean editable = isEditable(conn, networkTypeUri);
-				return makeNodeType(networkTypeUri, visNodeType, locale, editable);
+				return makeNodeType(conn, networkTypeUri, visNodeType, locale, editable);
 			} 
 		}catch (ClassCastException e) {
 		}
@@ -147,7 +157,7 @@ public class TypeServiceImpl implements TypeService {
 				VisNodeType visProject = getVisResource(conn, VisNodeType.class, uri);
 				if ( visProject != null ) {
 					boolean editable = isEditable(conn, res);
-					return makeNodeType(res, visProject, locale, editable);
+					return makeNodeType(conn, res, visProject, locale, editable);
 				} 
 			} finally {
 				conn.close();
@@ -198,7 +208,7 @@ public class TypeServiceImpl implements TypeService {
 				boolean nodeEdit = isEditable(conn, node, net);
 				VisPropertyType type = getVisResource(conn, VisPropertyType.class, uri);
 				if ( type != null ) {
-					return makePropertyType(networkType, type, locale, nodeEdit);
+					return makePropertyType(conn, networkType, type, locale, nodeEdit);
 				} 
 			} finally {
 				conn.close();
@@ -217,7 +227,7 @@ public class TypeServiceImpl implements TypeService {
 	 * @return
 	 * @throws RepositoryException 
 	 */
-	private NetworkType makeNetworkType(VisNetwork visProject, Locale locale) throws RepositoryException {
+	private NetworkType makeNetworkType(RepositoryConnection conn, VisNetwork visProject, Locale locale) throws RepositoryException {
 		NetworkType p = new NetworkType();
 		p.setId(visProject.getResource().stringValue());
 		p.setLocale(locale);
@@ -248,7 +258,7 @@ public class TypeServiceImpl implements TypeService {
 		Set<NodeType> nodeTypes = new HashSet<>();
 		for ( VisNodeType type : visProject.getVisTypes() ) {
 			if ( type.getType()!= null) {
-				NodeType t = makeNodeType(visProject.getResource(), type, locale, p.isEditable());
+				NodeType t = makeNodeType(conn, visProject.getResource(), type, locale, p.isEditable());
 				nodeTypes.add(t);
 			}
 		}
@@ -262,60 +272,25 @@ public class TypeServiceImpl implements TypeService {
 		}
 		p.setEdgeTypes(edgeTypes);
 		// 
-		Set<PropertyType> allPT = new HashSet<>();
+		Map<String, PropertyType> allPT = new HashMap<String,PropertyType>();
 		p.setPropertyTypes(p.getNetworkNode().getPropertyTypes());
 		for (NodeType nt : p.getNodeTypes() ) {
-			allPT.addAll(nt.getPropertyTypes());
+			allPT.putAll(nt.getPropertyTypes());
 		}
 		p.setPropertyTypes(allPT);
 		PropertyType labelProperty = p.getPropertyType(p.getLabelProperty(), configurationService.getStringConfiguration("vis.label.default", RDFS.label));
-		if ( ! p.getPropertyTypes().contains(labelProperty)) {
-			p.getPropertyTypes().add(labelProperty);
+		if ( ! p.getPropertyTypes().containsValue(labelProperty)) {
+			p.addPropertyType(labelProperty);
 		}
 		PropertyType commentProperty = p.getPropertyType(p.getCommentProperty(), configurationService.getStringConfiguration("vis.comment.default", RDFS.comment));
-		if ( ! p.getPropertyTypes().contains(commentProperty)) {
-			p.getPropertyTypes().add(commentProperty);
+		if ( ! p.getPropertyTypes().containsValue(commentProperty)) {
+			p.addPropertyType(commentProperty);
 		}
 		return p;
 		
 	}
-//	private NodeType makeNodeType(NetworkType config, VisNodeType type, Locale locale) {
-//		NodeType t = new NodeType();
-//		t.setId(type.getResource().stringValue());
-//		t.setLocale(locale);
-//		// use the skos properties
-//		t.setLabel(type.getLabel(locale));
-//		t.setComment(type.getComment(locale));
-//		t.setColor(type.getColor());
-//		t.setImage(type.getImage());
-//		// 
-//		t.setType(type.getType());
-//		t.setTypes(type.getTypes());
-//		// add the distinct properties
-//		for ( VisPropertyType pt : type.getPropertyTypes()) {
-//			//
-//			PropertyType prop =  makePropertyType(config.getId(), pt, locale, t.isEditable());
-//			t.getPropertyTypes().add(prop);
-//		}
-//		// check for the label property of the node type
-//		if ( type.getLabelProperty()!=null ) {
-//			t.setLabelProperty(type.getLabelProperty().getType());
-//		}
-//		else {
-//			t.setLabelProperty(config.getLabelProperty());
-//		}
-//		// check for the comment property of the node type
-//		if ( type.getCommentProperty()!=null ) {
-//			t.setCommentProperty(type.getCommentProperty().getType());
-//		}
-//		else {
-//			t.setCommentProperty(config.getCommentProperty());
-//		}
-//		t.setNetworkType(config.getId());
-//		t.setEditable(config.isEditable() ? type.isEditable() : false);
-//		return t;
-//	}
-	private NodeType makeNodeType(Resource config, VisNodeType type, Locale locale, boolean parentEditable) throws RepositoryException {
+
+	private NodeType makeNodeType(RepositoryConnection conn, Resource config, VisNodeType type, Locale locale, boolean parentEditable) throws RepositoryException {
 		NodeType t = new NodeType();
 		t.setNetworkType(config.stringValue());
 		
@@ -334,8 +309,8 @@ public class TypeServiceImpl implements TypeService {
 		// add the distinct properties
 		for ( VisPropertyType pt : type.getPropertyTypes()) {
 			//
-			PropertyType prop =  makePropertyType(config.stringValue(), pt, locale, t.isEditable());
-			t.getPropertyTypes().add(prop);
+			PropertyType prop =  makePropertyType(conn, config.stringValue(), pt, locale, t.isEditable());
+			t.addPropertyType(prop);
 		}
 		// check for the label property of the node type
 		Resource labelRes = getLabelProperty(type.getObjectConnection(), type.getResource(), config);
@@ -441,7 +416,7 @@ public class TypeServiceImpl implements TypeService {
 
 	}
 	
-	private PropertyType makePropertyType(String networkType, VisPropertyType type, Locale locale, boolean parentEditable) {
+	private PropertyType makePropertyType(RepositoryConnection conn, String networkType, VisPropertyType type, Locale locale, boolean parentEditable) {
 		PropertyType prop = new PropertyType();
 		prop.setId(type.getResource().stringValue());
 		prop.setLabel(type.getLabel(locale));
@@ -451,6 +426,7 @@ public class TypeServiceImpl implements TypeService {
 		prop.setNetworkType(networkType);
 		// 
 		prop.setType(type.getType());
+		Resource range = type.getRdfsRange();
 		try {
 			DisplayTypeEnum dataType = DisplayTypeEnum.valueOf(type.getDataType());
 			
@@ -478,17 +454,20 @@ public class TypeServiceImpl implements TypeService {
 			case URI:
 				prop.initDataType(XSD.AnyURI);
 				break;
+			case STRING:
+			    prop.initDataType(XSD.String);
 			default:
-				// no special datatype for string ...
+				prop.initDataType(XSD.String);
 
 			}
 		} catch (Exception e) {
+		    prop.initDataType(XSD.String);
 			prop.setDisplayType(DisplayTypeEnum.STRING);
 		}
 		prop.setMultiLingual(type.getMultiLingual());
 		prop.setMultiValue(type.getMultiValue());
 		prop.setRequired(type.getRequired());
-
+//		prop.setDataType(dataType);
 		//
 		if ( type.getPropertyValues()!= null) {
 			Set<PropertyTypeOption> values = new HashSet<>();

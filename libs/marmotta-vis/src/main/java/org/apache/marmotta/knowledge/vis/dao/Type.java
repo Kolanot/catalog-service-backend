@@ -1,5 +1,6 @@
 package org.apache.marmotta.knowledge.vis.dao;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlTransient;
@@ -61,6 +62,9 @@ public abstract class Type extends Base {
 	 */
 	@XmlTransient
 	public Set<String> getTypes() {
+	    if ( types == null ) {
+	        types = new HashSet<String>();
+	    }
 		return types;
 	}
 

@@ -1,6 +1,8 @@
 package org.apache.marmotta.knowledge.vis.dao;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class InstanceWithData extends InstanceWithProperties {
@@ -15,6 +17,13 @@ public class InstanceWithData extends InstanceWithProperties {
 	 */
 	public Set<NodeItem> getNodes() {
 		return nodes;
+	}
+	public Map<String,NodeItem> getNodeMap() {
+	    Map<String, NodeItem> map = new HashMap<String, NodeItem>();
+	    for ( NodeItem item : nodes) {
+	        map.put(item.getId(), item);
+	    }
+	    return map;
 	}
 	/**
 	 * @param nodes the nodes to set

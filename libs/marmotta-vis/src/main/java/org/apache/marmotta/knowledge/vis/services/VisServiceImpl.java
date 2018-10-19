@@ -93,8 +93,8 @@ public class VisServiceImpl implements VisService {
 					node.setEditable(nt.isEditable());
 					node.setInstanceType(nt);
 					Set<Property> props = new HashSet<>();
-					for ( PropertyType pt : nt.getPropertyTypes()) {
-						props.add(pt.asProperty(null, locale));
+					for ( PropertyType pt : nt.getPropertyTypes().values()) {
+						props.add(pt.asProperty(null,locale));
 					}
 					// process the values
 					node.setProperties(props);
@@ -149,7 +149,7 @@ public class VisServiceImpl implements VisService {
 	public Collection<PropertyType> getPropertyTypes(String networkType, Locale locale) {
 		try {
 			NetworkType p = visType.getNetworkType(networkType, locale);
-			return p.getPropertyTypes();
+			return p.getPropertyTypes().values();
 		} catch (RepositoryException e) {
 			throw new UnsupportedOperationException(e);
 		}

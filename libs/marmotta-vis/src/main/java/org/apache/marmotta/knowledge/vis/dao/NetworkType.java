@@ -1,12 +1,16 @@
 package org.apache.marmotta.knowledge.vis.dao;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.marmotta.knowledge.vis.ns.RDFS;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class NetworkType extends TypeWithPropertyTypes {
 
@@ -69,10 +73,10 @@ public class NetworkType extends TypeWithPropertyTypes {
 		nt.setEditable(true);
 		nt.setType(getType());
 		PropertyType labelType = nt.getPropertyType(getLabelProperty(), RDFS.label);
-		nt.getPropertyTypes().add(labelType);
+		nt.addPropertyType(labelType);
 		nt.setLabelProperty(labelType.getType());
 		PropertyType commentType = nt.getPropertyType(getCommentProperty(), RDFS.comment);
-		nt.getPropertyTypes().add(commentType);
+		nt.addPropertyType(commentType);
 		nt.setCommentProperty(commentType.getType());
 		return nt;
 	}
@@ -165,6 +169,10 @@ public class NetworkType extends TypeWithPropertyTypes {
 	public String getNodeInNetworkUri() {
 		return nodeInNetworkUri;
 	}
+	@JsonProperty("scope")
+	public String getNetworkScope() {
+	    return nodeInNetworkUri != null ? "network" : "graph";
+	}
 	/**
 	 * @param containmentUri the containmentUri to set
 	 */
@@ -172,37 +180,53 @@ public class NetworkType extends TypeWithPropertyTypes {
 		this.nodeInNetworkUri = containmentUri;
 	}
 
-
-//	/**
-//	 * @return the languages
-//	 */
-//	public Set<Locale> getLanguages() {
-//		return languages;
-//	}
-//	/**
-//	 * @param languages the languages to set
-//	 */
-//	public void setLanguages(Set<Locale> languages) {
-//		this.languages = languages;
-//	}
+	@XmlTransient
 	/**
 	 * @return the nodeTypes
 	 */
-	public Set<NodeType> getNodeTypes() {
+    public Set<NodeType> getNodeTypes() {
 		return nodeTypes;
 	}
+    /**
+     * return the node types as map with the {@link NodeType#getId()} as 
+     * key element 
+     * @return
+     */
+	@JsonProperty(value="nodeType")
+    public Map<String, NodeType> getNodeTypeMap() {
+        Map<String, NodeType> map = new HashMap<String, NodeType>();
+        for (NodeType item : nodeTypes) {
+            map.put(item.getId(), item);
+        }
+        return map;
+    }
+
 	/**
 	 * @param nodeTypes the nodeTypes to set
 	 */
 	public void setNodeTypes(Set<NodeType> nodeTypes) {
 		this.nodeTypes = nodeTypes;
 	}
+	@XmlTransient
 	/**
 	 * @return the edgeTypes
 	 */
 	public Set<EdgeType> getEdgeTypes() {
 		return edgeTypes;
 	}
+	/**
+	 * Retrieve the edgeType's as a map with {@link EdgeType#getId()}
+	 * as the key
+	 * @return
+	 */
+	@JsonProperty(value="edgeType")
+    public Map<String, EdgeType> getEdgeTypeMap() {
+        Map<String, EdgeType> map = new HashMap<String, EdgeType>();
+        for (EdgeType item : edgeTypes) {
+            map.put(item.getId(), item);
+        }
+        return map;
+    }
 	/**
 	 * @param edgeTypes the edgeTypes to set
 	 */

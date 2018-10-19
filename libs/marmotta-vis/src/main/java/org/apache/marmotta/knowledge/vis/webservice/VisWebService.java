@@ -449,7 +449,7 @@ public class VisWebService {
 		}
 		InstanceWithProperties data = vis.getNetwork(configuration, network, locale, complete);
 		if (data instanceof InstanceWithData ) {
-			return Response.ok().entity(((InstanceWithData) data).getNodes()).build();
+			return Response.ok().entity(((InstanceWithData) data).getNodeMap()).build();
 		}
 		return Response.noContent().build();
 	}

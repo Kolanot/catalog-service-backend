@@ -3,8 +3,10 @@ package org.apache.marmotta.knowledge.vis.services;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -35,6 +37,7 @@ import org.apache.marmotta.knowledge.vis.dao.NodeItem;
 import org.apache.marmotta.knowledge.vis.dao.NodeType;
 import org.apache.marmotta.knowledge.vis.dao.Property;
 import org.apache.marmotta.knowledge.vis.dao.PropertyType;
+import org.apache.marmotta.knowledge.vis.dao.PropertyValue;
 import org.apache.marmotta.knowledge.vis.ns.DCTERMS;
 import org.apache.marmotta.knowledge.vis.ns.RDF;
 import org.apache.marmotta.knowledge.vis.ns.RDFS;
@@ -444,52 +447,66 @@ public class InstanceServiceImpl implements InstanceService {
 			conn.close();
 		}
 	}
+	private Resource setGraph(RepositoryConnection conn, Graph graph, Locale locale) throws RepositoryException {
+        if ( graph.getId() == null ) {
+            String uri = configurationService.getBaseContext() 
+                    + graph.getClass().getSimpleName().toLowerCase() +"-" 
+                    + UUID.randomUUID().toString();
+            graph.setId(uri);
+        }
+        URI context = conn.getValueFactory().createURI(graph.getId());
+        if (!ResourceUtils.hasType(conn, context, VIS.Graph)) {
+            ResourceUtils.addType(conn, context, VIS.Graph_URI, context);
+        }
+        // store the editable setting
+        ResourceUtils.removeProperty(conn, context, VIS.editable, context);
+        Literal editable = conn.getValueFactory().createLiteral(graph.isEditable());
+        Statement edit = conn.getValueFactory().createStatement(context, VIS.editable_URI, editable, context);
+        conn.add(edit);
+        // provide the language settings
+        ResourceUtils.setProperty(conn, context, VIS.language, locale.stripExtensions().getLanguage(), context);
+        if ( graph.getLabel() != null ) {
+            ResourceUtils.removeProperty(conn, context, RDFS.label, context);
+            ResourceUtils.setProperty(conn, context, RDFS.label, graph.getLabel(), locale, context);
+        }
+        if ( graph.getComment() != null ) {
+            ResourceUtils.removeProperty(conn, context, RDFS.comment, context);
+            ResourceUtils.setProperty(conn, context, RDFS.comment, graph.getComment(), locale, context);
+        }
+        // be sure to have 
+        if ( locale != null && !graph.getLanguages().contains(locale)) {
+            graph.getLanguages().add(locale);
+        }
+        if (graph.getLanguages()!= null && graph.getLanguages().size() > 0) {
+            ResourceUtils.removeProperty(conn, context, VIS.hasLanguage, context);
+            
+            for(Locale l : graph.getLanguages()) {
+                ResourceUtils.setProperty(conn,  context,  VIS.hasLanguage, l.stripExtensions().getLanguage());
+//                Literal lit = conn.getValueFactory().createLiteral(l.stripExtensions().getLanguage());
+//                Statement stmt = conn.getValueFactory().createStatement(context, VIS.hasLanguage_URI, lit, context);
+//                conn.add(stmt);
+            }
+        }
+        if (graph.getType() != null) {
+            boolean typePresent = false;
+            for (String type : ResourceUtils.getProperties(conn,  context,  VIS.hasType)) {
+                if ( type.equals(graph.getType())) {
+                    typePresent = true;
+                }
+            };
+            if (!typePresent) {
+                ResourceUtils.setProperty(conn, context, VIS.hasType, graph.getType(), context);
+            }
+        }
+        return context;
+	}
 	@Override
 	public Graph setGraph(Graph graph, Locale locale) throws RepositoryException {
 		ObjectConnection conn = objectService.getConnection();
 		try {
 			conn.begin();
 			// be sure to have a new id
-			if ( graph.getId() == null ) {
-				String uri = configurationService.getBaseUri() + "resource/" 
-						+ graph.getClass().getSimpleName().toLowerCase() +"-" 
-						+ UUID.randomUUID().toString();
-				graph.setId(uri);
-			}
-			URI context = conn.getValueFactory().createURI(graph.getId());
-			if (!ResourceUtils.hasType(conn, context, VIS.Graph)) {
-				ResourceUtils.addType(conn, context, VIS.Graph_URI, context);
-			}
-			// store the editable setting
-			ResourceUtils.removeProperty(conn, context, VIS.editable, context);
-			Literal editable = conn.getValueFactory().createLiteral(graph.isEditable());
-			Statement edit = conn.getValueFactory().createStatement(context, VIS.editable_URI, editable, context);
-			conn.add(edit);
-			// provide the language settings
-			ResourceUtils.setProperty(conn, context, VIS.language, locale.stripExtensions().getLanguage(), context);
-			if ( graph.getLabel() != null ) {
-				ResourceUtils.removeProperty(conn, context, RDFS.label, context);
-				ResourceUtils.setProperty(conn, context, RDFS.label, graph.getLabel(), locale, context);
-			}
-			if ( graph.getComment() != null ) {
-				ResourceUtils.removeProperty(conn, context, RDFS.comment, context);
-				ResourceUtils.setProperty(conn, context, RDFS.comment, graph.getComment(), locale, context);
-			}
-			// be sure to have 
-			if ( locale != null && !graph.getLanguages().contains(locale)) {
-				graph.getLanguages().add(locale);
-			}
-			if (graph.getLanguages()!= null && graph.getLanguages().size() > 0) {
-				RepositoryResult<Statement> languages = conn.getStatements(context, VIS.hasLanguage_URI, null, context);
-				while (languages.hasNext()) {
-					conn.remove(languages.next());
-				}
-				for(Locale l : graph.getLanguages()) {
-					Literal lit = conn.getValueFactory().createLiteral(l.stripExtensions().getLanguage());
-					Statement stmt = conn.getValueFactory().createStatement(context, VIS.hasLanguage_URI, lit, context);
-					conn.add(stmt);
-				}
-			}
+			Resource context = setGraph(conn, graph, locale);
 			conn.commit();
 			if ( graph.getId()!=null) {
 				return getGraph(conn, context, locale);
@@ -511,7 +528,9 @@ public class InstanceServiceImpl implements InstanceService {
 				if ( nt != null) {
 					// initialize the network properly
 					if ( validateInstance(conn, nwType, nt, network.getId(), network)) {
-						conn.begin(); 
+                        if ( !conn.isActive()) {
+                            conn.begin();
+                        }
 						processInstanceWithProperties(conn, nwType.getNetworkNode(), network);
 						// 
 						conn.commit();
@@ -613,7 +632,7 @@ public class InstanceServiceImpl implements InstanceService {
 						}
 					});
 				}
-				for (PropertyType pt : nt.getPropertyTypes() ) {
+				for (PropertyType pt : nt.getPropertyTypes().values() ) {
 					boolean found = false;
 					for ( Property used : props ) {
 						if (pt.getId().equals(used.getType())) {
@@ -659,16 +678,14 @@ public class InstanceServiceImpl implements InstanceService {
 					property.setInstanceType(pt);
 					// 
 					Resource gr = getContext(conn, instanceUri, nodeType.getType());
-					setPropertyValue(conn, instanceUri, pt, property, gr);
+					setProperty(conn, instanceUri, pt, property, gr);
 					URI grUri = conn.getValueFactory().createURI(gr.stringValue());
 					setLastModified(conn, instanceUri, new Date(), grUri);
 					conn.commit();
-					property.setLabel(property.getValue());
-					property.setOldValue(property.getValue());
-					property.setId(instanceUri.stringValue());
+//					property.setLabel(property.getValue());
+//					property.setOldValue(property.getValue());
+					property.setId(pt.getId());
 					return property;
-					//private Node getNode(RepositoryConnection conn, NetworkType networkType, NodeType nt, String network, String nodeInstance, Locale locale) throws RepositoryException {
-					// return getNode(conn, networkType, nodeType, null, nodeInstance, property.getLocale());
 				}
 			}
 			return null;
@@ -805,7 +822,7 @@ public class InstanceServiceImpl implements InstanceService {
 					PropertyType pt = nt.getPropertyTypeById(property.getType());
 					Resource instanceUri = conn.getValueFactory().createURI(instance);
 					Resource graph = getContext(conn, instanceUri, nt.getType());
-					deletePropertyValue(conn, instanceUri, pt, property, graph);
+					deleteProperty(conn, instanceUri, pt, property, graph);
 					conn.commit();
 					return true;
 				}
@@ -922,49 +939,51 @@ public class InstanceServiceImpl implements InstanceService {
 			tQuery.setBinding("uri", nodeInstanceUri);
 			TupleQueryResult result = tQuery.evaluate();
 			// create property set
-			Set<Property> props = new HashSet<>();
+			Map<String, Property> propMap = new HashMap<>();
 			while ( result.hasNext()) {
 				BindingSet bs = result.next();
-				Property g = new Property();
 				PropertyType pt = null;
-				if ( bs.hasBinding("uri")) {
-					// keep the subject uri with the property object
-					g.setId(bs.getValue("uri").stringValue());
-					
-				}
 				if ( bs.hasBinding("property")) {
-					//g.setType(bs.getValue("property").stringValue());
-					pt = nodeType.getPropertyType(bs.getValue("property").stringValue());
+				    //g.setType(bs.getValue("property").stringValue());
+				    pt = nodeType.getPropertyType(bs.getValue("property").stringValue());
 				}
-				if ( bs.hasBinding("target")){
-					g.setLabel(bs.getValue("target").stringValue());
-					Value v = bs.getValue("target");
-					if ( v instanceof Literal ) {
-						Literal l = (Literal) v;
-						g.setLabel(l.getLabel());
-						g.setValue(l.getLabel());
-						g.setOldValue(l.getLabel());
-						if ( l.getLanguage() != null ) {
-							g.setLocale(Locale.forLanguageTag(l.getLanguage()));
-						}
-						if ( l.getDatatype()!=null) {
-							g.setDataType(l.getDatatype().getLocalName());
-						}
-						//g.getProperty().setDataType(l.getDatatype().stringValue());
-					}
-					//g.setValue(bs.getValue("target").stringValue());
-				}
-				//g.setNodeType(nodeType.getId());
 				if ( pt != null ) {
-					g.setInstanceType(pt);
-					g.setEditable(pt.isEditable());
-					g.setDataType(pt.getDataType());
-				}	// todo: validate Property (locale, value, type etc.)
-				if ( g.getInstanceType()!=null) {
-					props.add(g);
+				    Property prop = propMap.get(pt.getType());
+				    String value = null;
+				    Locale locale = null;
+				    
+				    if ( bs.hasBinding("target")){
+				        Value v = bs.getValue("target");
+				        if ( v instanceof Literal ) {
+				            Literal l = (Literal) v;
+				            value = l.getLabel();
+				            if ( l.getLanguage() != null ) {
+				                locale = Locale.forLanguageTag(l.getLanguage());
+				            }
+				        }
+				        //g.setValue(bs.getValue("target").stringValue());
+				    }
+				    if ( prop == null ) {
+				        prop = pt.asProperty(value, locale);
+				        propMap.put(pt.getType(), prop);
+				    }
+				    else {
+				        // add additional values only when multiValue
+				        if ( pt.getMultiValue()) {
+				            prop.addValue(value, locale);
+				        }
+				    }
 				}
+//				if ( bs.hasBinding("uri")) {
+//					// keep the subject uri with the property object
+//					g.setId(bs.getValue("uri").stringValue());
+//					
+//				}
+				//g.setNodeType(nodeType.getId());
 			}
-			return props;
+			Set<Property> set = new HashSet<Property>();
+			set.addAll(propMap.values());
+			return set;
 			
 		} catch (MalformedQueryException e) {
 			throw new RepositoryException(e);
@@ -972,6 +991,7 @@ public class InstanceServiceImpl implements InstanceService {
 			throw new RepositoryException(e);
 		}
 	}
+	
 	/**
 	 * Any instance may have labels & comments either as fully qualified properties (e.g. 
 	 * check {@link InstanceWithProperties#getProperty(String)} for labelType & commentType.
@@ -997,7 +1017,7 @@ public class InstanceServiceImpl implements InstanceService {
 					PropertyType labelType = networkType.getPropertyType(networkType.getLabelProperty(), RDFS.label);
 					labelPropertyUsed = labelType.asProperty(fromInstance.getLabel(), fromInstance.getLocale());
 					propsInUse.add(labelPropertyUsed);
-					fromInstance.getInstanceType().getPropertyTypes().add(labelType);
+					fromInstance.getInstanceType().addPropertyType(labelType);
 				}
 			}
 		}
@@ -1014,7 +1034,7 @@ public class InstanceServiceImpl implements InstanceService {
 					PropertyType commentType = networkType.getPropertyType(networkType.getCommentProperty(), RDFS.comment);
 					commentPropertyUsed = commentType.asProperty(fromInstance.getComment(), fromInstance.getLocale());
 					propsInUse.add(commentPropertyUsed);
-					fromInstance.getInstanceType().getPropertyTypes().add(commentType);
+					fromInstance.getInstanceType().addPropertyType(commentType);
 				}
 			}
 		}
@@ -1065,7 +1085,19 @@ public class InstanceServiceImpl implements InstanceService {
 					// when the network's node type equals to the instance's node type 
 					// we can use the instance's uri as the context / named graph URI
 					if ( fromInstance.getInstanceType().equals(networkType.getNetworkNode())) {
-						graph = conn.getValueFactory().createURI(uri);
+					    if ( !conn.isActive()) {
+					        conn.begin();
+					    }
+					    Graph theGraph = new Graph();
+					    theGraph.setLabel(fromInstance.getLabel());
+					    theGraph.setComment(fromInstance.getComment());
+					    theGraph.setEditable(true);
+					    theGraph.setLocale(fromInstance.getLocale());
+					    theGraph.getLanguages().add(fromInstance.getLocale());
+					    theGraph.setType(networkType.getId());
+					    graph = setGraph(conn, theGraph, fromInstance.getLocale());
+					    //
+						graph = conn.getValueFactory().createURI(theGraph.getId());
 					}
 					else {
 						// it is not possible to determine the graph
@@ -1143,7 +1175,7 @@ public class InstanceServiceImpl implements InstanceService {
 			// retrieve & process the properties for the current property type
 			for ( Property propVal : fromInstance.getProperties(propType.getId())) {
 				if ( propType.isEditable() ) {
-					setPropertyValue(conn, instanceUri, propType, propVal, graph);
+					setProperty(conn, instanceUri, propType, propVal, graph);
 				}
 			}
 		}
@@ -1230,51 +1262,58 @@ public class InstanceServiceImpl implements InstanceService {
 		return literal;
 	}
 
-
-
-	private void deletePropertyValue(RepositoryConnection conn, Resource instance, PropertyType type, Property value, Resource graph) throws RepositoryException {
-		URI graphURI = conn.getValueFactory().createURI(graph.stringValue());
-		if ( ! type.getMultiValue() ) {
-			if ( type.getMultiLingual() ) {
-				// remove all triples of the provded language
-				ResourceUtils.removeProperty(conn, instance, type.getType(), value.getLocale(), graphURI);
-			} else {
-				// 
-				// remove all triples 
-				ResourceUtils.removeProperty(conn, instance, type.getType(), graphURI);
-			}
-		}
-		else {
-			// delete the old value by searching and removing 
-			if ( value.getOldValue()!= null ) {
-				Literal lit = createLiteral(conn, value.getOldValue(), value.getLocale(), value.getDataType());
-				// we now have a literal
-				URI propertyUri = conn.getValueFactory().createURI(type.getType());
-				RepositoryResult<Statement> old = conn.getStatements(instance, propertyUri, lit, true, graphURI);
-				while (old.hasNext()) {
-					conn.remove(old);
-				}
-			}
-		}
+	/**
+	 * Delete all triples of the provided property-type
+	 * @param conn
+	 * @param instance
+	 * @param type
+	 * @param property
+	 * @param graph
+	 * @throws RepositoryException
+	 */
+	private void deleteProperty(RepositoryConnection conn, Resource instance, PropertyType type, Property property, Resource graph) throws RepositoryException {
+        URI graphURI = conn.getValueFactory().createURI(graph.stringValue());
+        if ( type.getMultiValue() ) {
+            ResourceUtils.removeProperty(conn,  instance, type.getType(), graphURI);
+        }
 	}
-	private void setPropertyValue(RepositoryConnection conn, Resource instance, PropertyType type, Property value, Resource graph) throws RepositoryException {
-		if ( value.getOldValue() != null && value.getValue().equals(value.getOldValue())) {
-			// no change detected
-			return;
-		}
-		deletePropertyValue(conn, instance, type, value, graph);
-		// now create the new statement
-		URI propertyUri = conn.getValueFactory().createURI(type.getType());
-		Literal val = createLiteral(conn, value.getValue(), value.getLocale(), value.getDataType());
-		// create the new statement and add 
-		Statement stmt = conn.getValueFactory().createStatement(instance, propertyUri, val, graph);
-		conn.add(stmt);
-		
+	private void createPropertyValue(RepositoryConnection conn, Resource instance, PropertyType type, PropertyValue value, URI graph) throws RepositoryException {
+	    if ( value.getValue() != null ) {
+	        URI propertyUri = conn.getValueFactory().createURI(type.getType());
+	        Literal val = createLiteral(conn, value.getValue(), value.getLocale(), type.getDataType());
+	        // create the new statement and add 
+	        Statement stmt = conn.getValueFactory().createStatement(instance, propertyUri, val, graph);
+	        conn.add(stmt);
+	    }
+        
 	}
-//	private void setPropertyValue(RepositoryConnection conn, Resource instance, PropertyType type, Property value, String graphUri) throws RepositoryException {
-//		URI graph = conn.getValueFactory().createURI(graphUri);
-//		setPropertyValue(conn, instance, type, value, graph);
-//	}
+	private void setProperty(RepositoryConnection conn, Resource instance, PropertyType type, Property value, Resource graph) throws RepositoryException {
+	    if ( value.isModified()) {
+    	    URI graphURI = conn.getValueFactory().createURI(graph.stringValue());
+    	    Set<Locale> processedLocale = new HashSet<Locale>();
+    	    
+    		for ( PropertyValue propVal : value.getValues() ) {
+    		    if ( propVal.getLocale() != null && ! processedLocale.contains(propVal.getLocale())) {
+    		        // multiLingual property
+    		        // remove all properties for the given language before adding the new ones
+    		        ResourceUtils.removeProperty(conn, instance, type.getType(), propVal.getLocale(), graphURI);
+    		        processedLocale.add(propVal.getLocale());
+    		    }
+    		    else {
+    		        // no language property - use the type's locale for delete-check
+    		        if ( ! processedLocale.contains(type.getLocale())) {
+    		            ResourceUtils.removeProperty(conn, instance, type.getType(), graphURI);
+    		            processedLocale.add(type.getLocale());
+    		        }
+    		    }
+    		    
+    		    // create 
+    		    createPropertyValue(conn, instance, type, propVal, graphURI);
+    
+    		}
+	    }
+	}
+
 
 	private void setEdgeValue(RepositoryConnection conn, Resource instance, String prop, Resource target, String context, boolean delete) throws RepositoryException {
 		URI predicate = conn.getValueFactory().createURI(prop); 
@@ -1358,9 +1397,8 @@ public class InstanceServiceImpl implements InstanceService {
 //			value.setId(graph.getId());
 			value.setId(graph.getId());
 			value.setLabel(graph.getLabel());
+            value.addValue(graph.getLabel(),  graph.getLocale());
 			value.setLocale(graph.getLocale());
-			value.setValue(graph.getLabel());
-			value.setOldValue(graph.getLabel());
 			value.setEditable(graph.isEditable());
 			//
 			value.setNamedGraph(graph.getNamedGraph());
@@ -1376,8 +1414,7 @@ public class InstanceServiceImpl implements InstanceService {
 			value.setId(graph.getId());
 //			value.setId(graph.getId());
 			value.setLabel(graph.getComment());
-			value.setValue(graph.getComment());
-			value.setOldValue(graph.getComment());
+			value.addValue(graph.getComment(),  graph.getLocale());
 			value.setLocale(graph.getLocale());
 			value.setEditable(graph.isEditable());
 			//
@@ -1432,44 +1469,6 @@ public class InstanceServiceImpl implements InstanceService {
 			String comment = ResourceUtils.getProperty(conn, graphUri, RDFS.comment, g.getLocale());
 			g.setLabel(label);
 			g.setComment(comment);
-//			Set<Property> values = new HashSet<>();
-//			PropertyType pt = nt.getPropertyType(nt.getLabelProperty(), RDFS.label);
-//			if ( pt != null ) {
-//				// create the property for the network's label
-//				Property value = new Property();
-//				value.setId(g.getId()+"#label");
-//				value.setLabel(g.getLabel());
-//				value.setLocale(g.getLocale());
-//				value.setValue(g.getLabel());
-//				value.setOldValue(g.getLabel());
-//				value.setEditable(g.isEditable());
-//				//
-//				value.setNetworkType(nt.getId());
-//				value.setNamedGraph(graphUri.stringValue());
-//				value.setNodeType(nt.getId());
-//				value.setInstanceType(pt);
-//				values.add(value);
-//				
-//			}
-//			pt = nt.getPropertyType(nt.getCommentProperty(), RDFS.comment);
-//			if ( pt != null ) {
-//				Property value = new Property();
-//				value.setId(g.getId()+"#comment");
-//				value.setLabel(g.getComment());
-//				value.setValue(g.getComment());
-//				value.setOldValue(g.getComment());
-//				value.setLocale(g.getLocale());
-//				value.setEditable(g.isEditable());
-//				//
-//				value.setNetworkType(nt.getId());
-//				value.setNamedGraph(graphUri.stringValue());
-//				//value.setNetwork(network.getId());
-//				value.setNodeType(nt.getId());
-//				value.setInstanceType(pt);
-//				values.add(value);
-//				
-//			}
-			//g.setProperties(values);
 			return g;
 		}
 		throw new RepositoryException(String.format("URI <%s> is not a named graph!", graphUri.stringValue()));
@@ -1513,9 +1512,8 @@ public class InstanceServiceImpl implements InstanceService {
 				Property value = new Property();
 				value.setId(network.getId());
 				value.setLabel(network.getLabel());
+				value.addValue(network.getLabel(), network.getLocale());
 				value.setLocale(network.getLocale());
-				value.setValue(network.getLabel());
-				value.setOldValue(network.getLabel());
 				value.setEditable(network.isEditable());
 				//
 				value.setNamedGraph(network.getNamedGraph());
@@ -1531,8 +1529,7 @@ public class InstanceServiceImpl implements InstanceService {
 				Property value = new Property();
 				value.setId(network.getId());
 				value.setLabel(network.getComment());
-				value.setValue(network.getComment());
-				value.setOldValue(network.getComment());
+				value.addValue(network.getComment(), network.getLocale());
 				value.setLocale(network.getLocale());
 				value.setEditable(network.isEditable());
 				//
@@ -1645,6 +1642,10 @@ public class InstanceServiceImpl implements InstanceService {
 				if ( bs.hasBinding("title")){
 					g.setLabel(bs.getValue("title").stringValue());
 				}
+				else {
+				    // use the id as label
+				    g.setLabel(g.getId());
+				}
 				if ( bs.hasBinding("comment")){
 					g.setComment(bs.getValue("comment").stringValue());
 				}
@@ -1729,6 +1730,9 @@ public class InstanceServiceImpl implements InstanceService {
 				}
 				if ( bs.hasBinding("title")){
 					g.setLabel(bs.getValue("title").stringValue());
+				}
+				else {
+				    g.setLabel(g.getId());
 				}
 				if ( bs.hasBinding("comment")){
 					g.setComment(bs.getValue("comment").stringValue());

@@ -1,40 +1,21 @@
 package org.apache.marmotta.knowledge.vis.dao;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+@JsonInclude(Include.NON_EMPTY)
 public class Property extends Instance<PropertyType> {
 //	private String nodeType;
 	private String dataType;
-	private String value;
-	private String oldValue;
-
-	/**
-	 * @return the value
-	 */
-	public String getValue() {
-		return value;
-	}
-
-	/**
-	 * @param value the value to set
-	 */
-	public void setValue(String value) {
-		this.value = value;
-	}
-
-	/**
-	 * @return the newValue
-	 */
-	public String getOldValue() {
-		return oldValue;
-	}
-
-	/**
-	 * @param newValue the newValue to set
-	 */
-	public void setOldValue(String newValue) {
-		this.oldValue = newValue;
-	}
+	
+	private List<PropertyValue> values;
 
 	/**
 	 * @return the valueType
@@ -48,6 +29,21 @@ public class Property extends Instance<PropertyType> {
 	 */
 	public void setDataType(String valueType) {
 		this.dataType = valueType;
+	}
+	public void addValue(String value, Locale locale) {
+	    PropertyValue v = new PropertyValue();
+	    v.setValue(value==null?"":value);
+	    v.setOldValue(value);
+	    v.setLocale(locale);
+	    getValues().add(v);
+	    
+	}
+
+	public void addValue(String value, String language) {
+	    if ( language != null ) {
+	        addValue(value, Locale.forLanguageTag(language));
+	    }
+	    addValue(value, (Locale)null);
 	}
 
 //	/**
@@ -76,4 +72,24 @@ public class Property extends Instance<PropertyType> {
 //		return String.format("%s:%s:%s", super.getId(), hash, getLocale().getLanguage());
 //	}
 
+    public List<PropertyValue> getValues() {
+        if (values == null ) {
+            values = new ArrayList<PropertyValue>();
+        }
+        return values;
+    }
+
+    public void setValues(List<PropertyValue> values) {
+        this.values = values;
+    }
+    @JsonIgnore
+    @XmlTransient
+    public boolean isModified() {
+        for (PropertyValue value :  getValues() ) {
+            if ( value.isModified() ) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

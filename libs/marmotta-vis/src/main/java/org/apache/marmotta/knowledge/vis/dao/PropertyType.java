@@ -20,6 +20,9 @@ public class PropertyType extends Type {
 	 * @return the multiValue
 	 */
 	public Boolean getMultiValue() {
+	    if ( multiValue == null ) {
+	        return Boolean.FALSE;
+	    }
 		return multiValue;
 	}
 
@@ -113,8 +116,8 @@ public class PropertyType extends Type {
 			property.setLocale(locale);
 		}
 		property.setId(getId());
-		property.setValue(value);
-		property.setLabel(value);
+		property.setLabel(this.getLabel());
+		property.addValue(value, getMultiLingual()?locale:null);
 //		property.setNetworkType(nw.getId());
 //		property.setNodeType(no.getId());
 		// create an id including the locale
