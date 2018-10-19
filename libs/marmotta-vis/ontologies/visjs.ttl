@@ -104,6 +104,12 @@ vis:hasType rdf:type rdf:Property, owl:InverseFunctionalProperty;
 	owl:inverseOf vis:isTypeOf;
 	.
 
+vis:hasNetworkOfType rdf:type rdf:Property, owl:ObjectProperty;
+	rdfs:label "The named graph contains networks of type"@en;
+	rdfs:range vis:Network;
+	rdfs:domain vis:Graph;
+	.
+
 vis:isTypeOf rdf:type rdf:Property, owl:InverseFunctionalProperty;
 	rdfs:label "Project using this type"@en;
 	rdfs:range vis:Network;

@@ -88,7 +88,7 @@ vis:ConceptNode a vo:NodeType;
 	# assign the type to a network
 	vo:isTypeOf vis:SkosNetwork;
 	# the list of properties
-	vo:hasProperty vis:RdfsLabelProperty, vis:RdfsCommentProperty, vis:CreatedProperty, vis:PrefLabelProperty, vis:SkosDefinitionProperty;
+	vo:hasProperty vis:RdfsLabelProperty, vis:RdfsCommentProperty, vis:CreatedProperty, vis:PrefLabelProperty, vis:AltLabelProperty, vis:SkosDefinitionProperty;
 	dcterms:created "2016-08-30T19:44:39.000+02:00"^^xsd:dateTime ;
 	.
 
@@ -153,7 +153,8 @@ vis:RdfsLabelProperty a vo:StringPropertyType, vo:PropertyType;
 #
 vis:PrefLabelProperty a vo:StringPropertyType, vo:PropertyType;
 	# name the property type
-	rdfs:label "Title"@en;
+	rdfs:label "Label"@en;
+	rdfs:label "Bezeichnung"@de;
 	# add some description
 	rdfs:comment "Add some title"@en;
 	# denote the rdfType to use when storing an instanceo of the LabelProperty
@@ -167,6 +168,28 @@ vis:PrefLabelProperty a vo:StringPropertyType, vo:PropertyType;
 	
 	vo:isPropertyOf vis:ConceptNode; 
 .
+
+#
+# node type properties
+#
+vis:AltLabelProperty a vo:StringPropertyType, vo:PropertyType;
+	# name the property type
+	rdfs:label "Alternate Label"@en;
+	rdfs:label "Synonym Label"@de;
+	# add some description
+	rdfs:comment "Add some title"@en;
+	# denote the rdfType to use when storing an instanceo of the LabelProperty
+	vo:visType skos:altLabel;
+	vo:dataType "STRING";
+	# specify multilingual, editable, multiple values for the property instances
+	vo:multiLingual "true"^^xsd:boolean;
+	vo:multiValue "true"^^xsd:boolean;
+	vo:editable "true"^^xsd:boolean;
+	vo:required "true"^^xsd:boolean;
+	
+	vo:isPropertyOf vis:ConceptNode; 
+.
+
 #
 # node type properties
 #
