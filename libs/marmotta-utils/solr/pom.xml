@@ -3,7 +3,7 @@
     <parent>
 	  	<groupId>org.apache.marmotta.util</groupId>
   		<artifactId>marmotta-utils</artifactId>
-        <version>3.4.0-SNAPSHOT</version>
+        <version>3.4.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 

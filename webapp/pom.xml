@@ -39,7 +39,7 @@
 
         <project.build.sourceEncoding>utf-8</project.build.sourceEncoding>
 
-        <marmotta.version>3.4.0-SNAPSHOT</marmotta.version>
+        <marmotta.version>3.4.0</marmotta.version>
         <sesame.version>2.7.16</sesame.version>
         <junit.version>4.11</junit.version>
         <weld.version>2.1.Final</weld.version>
@@ -574,7 +574,7 @@
         <dependency>
         	<groupId>org.apache.marmotta</groupId>
         	<artifactId>marmotta-skos</artifactId>
-        	<version>3.4.0-SNAPSHOT</version>
+        	<version>3.4.0</version>
         </dependency>
         <dependency>
         	<groupId>org.apache.shiro</groupId>
@@ -594,12 +594,12 @@
         <dependency>
         	<groupId>org.apache.marmotta</groupId>
         	<artifactId>marmotta-search</artifactId>
-        	<version>3.4.0-SNAPSHOT</version>
+        	<version>3.4.0</version>
         </dependency>
         <dependency>
         	<groupId>org.apache.marmotta</groupId>
         	<artifactId>marmotta-alibaba</artifactId>
-        	<version>3.4.0-SNAPSHOT</version>
+        	<version>3.4.0</version>
         </dependency>
         <dependency>
         	<groupId>eu.nimble.services.catalog</groupId>
@@ -609,7 +609,7 @@
         <dependency>
         	<groupId>org.apache.marmotta</groupId>
         	<artifactId>marmotta-vis</artifactId>
-        	<version>3.4.0-SNAPSHOT</version>
+        	<version>3.4.0</version>
         </dependency>
     </dependencies>
 
