@@ -37,7 +37,7 @@ node('nimble-jenkins-slave') {
         }
 
         stage('Deploy FMP') {
-            sh 'ssh fmp-prod "cd /srv/nimble-fmp/infra/marmotta && sudo ./run.sh deploy"'
+            sh 'ssh fmp-prod "cd /srv/nimble-fmp/infra/marmotta && ./run.sh deploy"'
         }
     }
 }
