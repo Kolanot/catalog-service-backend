@@ -24,7 +24,7 @@
 
     <properties>
         <psmss.version>${project.version}</psmss.version>
-        <marmotta.version>3.4.0-SNAPSHOT</marmotta.version>
+        <marmotta.version>3.4.0</marmotta.version>
 		<sesame.version>2.7.16</sesame.version>
 		<alibaba.version>2.1-SNAPSHOT</alibaba.version>
 		<junit.version>4.11</junit.version>

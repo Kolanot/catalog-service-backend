@@ -25,7 +25,7 @@
         </file>
         <file>
             <location>kiwi-version.json</location>
-            <contains>^\Q{"kiwi.version":"3.4.0-SNAPSHOT"}\E$</contains>
+            <contains>^\Q{"kiwi.version":"3.4.0"}\E$</contains>
         </file>
     </files>
 </verifications>
