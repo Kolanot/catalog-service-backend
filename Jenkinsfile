@@ -29,7 +29,11 @@ node('nimble-jenkins-slave') {
     } else {
 
         stage('Build Docker') {
-            sh 'docker build -t nimbleplatform/marmotta .'
+            sh 'docker build -t nimbleplatform/marmotta:latest .'
+        }
+
+        stage('Push Docker') {
+            sh 'docker push nimbleplatform/marmotta:latest'
         }
 
         stage('Deploy MVP') {
