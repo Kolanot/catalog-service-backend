@@ -32,8 +32,12 @@ node('nimble-jenkins-slave') {
             sh 'docker build -t nimbleplatform/marmotta .'
         }
 
-        stage('Deploy') {
+        stage('Deploy MVP') {
             sh 'ssh nimble "cd /data/deployment_setup/prod/infra/marmotta/ && sudo ./run.sh deploy"'
+        }
+
+        stage('Deploy FMP') {
+            sh 'ssh fmp-prod "cd /srv/nimble-fmp/infra/marmotta && sudo ./run.sh deploy"'
         }
     }
 }
